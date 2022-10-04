@@ -4,7 +4,7 @@ runtime: shiny_prerendered
 output:
   learnr::tutorial:
     allow_skip: yes
-    progressive: yes
+    progressive: no
 ---
 
 ```{r setup, include=FALSE}
@@ -360,7 +360,7 @@ question("Wie groß ist die Quadratsumme für den Faktor Meditation?",
 Wie sieht's mit einer abhängigen ANOVA aus? Wir können diesmal die Daten aus der Übung verwenden:
 
 <hr>
-<img src="www/anova_uebung.png" width="650">
+<img src="images/anova_uebung.png" width="650">
 <hr>
 
 Datenerstellung in `R` und eine Within-ANOVA:
@@ -421,7 +421,7 @@ question("Wie genau äußert sich der Effekt des Zeitpunkts?",
 ### Unabhängige Stichproben
 Bleibt nur noch die Kontrast-Analyse. Wir schauen uns zunächst ein Beispiel aus der Übung an. Das Lehrergeschlecht (männlich, weiblich) und die Schülerzusammensetzung (nur männlich, nur weiblich, männlich und weiblich) sind UVs:
 
-<img src="www/ka_table.png" width="500">
+<img src="images/ka_table.png" width="500">
 
 In R erstellen wir erst mal die Daten:
 
@@ -437,7 +437,7 @@ Der erste Buchstabe steht für das Lehrergeschlecht, der zweite für die Zusamme
 
 In der Übung kamen wir auf ein $r_\mathrm{effect size}$ von 0.93. Wir schauen erst mal, ob wir das reproduzieren können. Dafür erstellen wir uns die Lambdas, die sich aus folgenden hypothetischen Mittelwerten ergeben:
 
-<img src="www/ka_lambda.png" width="600">
+<img src="images/ka_lambda.png" width="600">
 
 ```{r}
 mw <- c(15, 17, 13, 15, 23, 19)
@@ -478,7 +478,7 @@ summary(calc_contrast(av, between = group,
 Nun bist du an der Reihe. Ich habe Dir Daten aus der Vorlesung vorbereitet (Folie 13):
 
 <hr>
-<img src="www/ka_vorlesung_f13.png" width="500">
+<img src="images/ka_vorlesung_f13.png" width="500">
 <hr>
 
 In `R` sieht der Dataframe so aus:
@@ -524,7 +524,7 @@ Für abhängige Stichproben ist die Kontrast-Analyse viel einfacher -- sowohl ko
 
 Die Daten sind:
 
-<img src="www/ka_abhaengig.png" width="600">
+<img src="images/ka_abhaengig.png" width="600">
 
 In `R` erstellen wir uns den Dataframe und führen die Berechnung durch:
 
@@ -657,7 +657,7 @@ mein_t_test(c(-.09, .01, .03, -.31, .34), c(-.26, -.26, -.21, -.08))
 Rechne die Kontrastanalyse aus der Vorlesung auf Folie 21 mit `cofad` nach:
 
 <hr>
-<img src="www/ka_vorlesung_f21.png" width="600">
+<img src="images/ka_vorlesung_f21.png" width="600">
 <hr>
 
 
@@ -690,7 +690,7 @@ question("Wie groß ist $g_\\mathrm{contrast}$?",
 Rechne die ANOVA aus der Vorlesung auf Folie 12 nach:
 
 <hr>
-<img src="www/anova_vorlesung_f12.png" width="600">
+<img src="images/anova_vorlesung_f12.png" width="600">
 <hr>
 
 ```{r avuebung, exercise=TRUE}
