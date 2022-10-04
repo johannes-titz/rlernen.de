@@ -1,0 +1,817 @@
+---
+title: "2. Daten-Gerangel"
+runtime: shiny_prerendered
+output:
+  learnr::tutorial:
+    allow_skip: yes
+    progressive: yes
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(printr)
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE)
+tutorial_options(exercise.startover = TRUE)
+
+#--------extra libs
+library(psych)
+library(dplyr)
+
+#--------data
+data <- readRDS("data/pizza.RData")
+imdb <- readRDS("data/imdb.RData")
+```
+
+## Selektieren
+Unser Pizza-Datensatz vom ersten Tag ist mit drei Pizzen recht langweilig, aber wir können uns auch mal alle Pizzen der Pizzeria anschauen:
+
+```{r echo=TRUE, eval = TRUE}
+preis <- c(6, rep(8, 4), 8.5, 8.5, 8, 8.5, 9, 8.5, 9, 9, 9, 8.5, 9, 8.5, 9,
+           9.5, 11.5, 11.5, 11.5, 11.5, 12, 12, 11.5, 12, 12.5, 12, 12.5, 12.5, 12.5, 12, 12.5, 12, 12.5)
+durchmesser <- c(rep(26, 18), rep(32, 18))
+name <- c(rep(c("Margherita", "Mozzarella", "Cipolla", "Pancetta", "Funghi",
+                "Primavera", "Spinaci", "Paprica colorati", "Hawaii",
+                "Diavolo", "Diavolo bianca", "Torita", "Tuco", "Verde Pesto",
+                "Salsicce", "Speciale", "Prosciutto", "4 Käse plus"), 2))
+preis_pro_kubikcm = preis / (pi*(durchmesser/2)^2 * 1)
+data <- data.frame(name, preis, durchmesser, preis_pro_kubikcm)
+data
+```
+
+Eine Menge Daten, an denen wir uns nun auslassen können. Bei fast jeder statistischen Analyse ist man gezwungen bestimmte Fälle und Variablen zu selektieren. Im einfachsten Fall ist das ähnlich zu einem Matrix-Index. Sagen wir mal, wir möchten gerne Zeile 10, Spalte 2 (der Preis der Diavolo Pizza, 8.0). In Matrix-Index-Notation wäre dies $\mathrm{data}_{10,2}$ und in R fast genau so:
+
+```{r echo=TRUE}
+data[10, 2]
+```
+
+Einziger Unterschied ist, dass wir hier die eckigen Klammern ``[]`` benutzen müssen. Im Grunde sind diese Klammern auch wieder nur eine Funktion, aber mit einer speziellen Syntax. Die Klammern stehen hinter dem Objekt, auf welches eine Selektion angewandt werden soll. Die erste Zahl nach dem ``[`` selektiert die Zeile, dann kommt ein Komma, gefolgt von der Spalte, die selektiert werden soll. Das ganze wird dann mit ``]`` wieder geschlossen.
+
+Wähle Zeile 20, Spalte 4 von **data** aus.
+
+```{r selektion1, exercise = TRUE}
+
+```
+
+```{r selektion1-solution}
+data[20, 4]
+```
+
+```{r selektion1mpc, echo=FALSE}
+question(
+  "Welcher Wert kommt heraus?",
+  answer(as.character(data[20, 4]), correct = T),
+  answer("Mozarella"),
+  answer("11.5"),
+  answer("32"),
+  answer(as.character(data[2, 4])),
+  answer(as.character(data[1, 4])),
+  random_answer_order = T
+)
+```
+
+Tatsächlich sind die eckigen Klammern viel flexibler als der Matrix-Index, denn sie kommen auch mit Vektoren klar. Wollen wir die ersten und letzten 5 Zeilen auswählen, sowie Spalte 1 und 4, so schreiben wir:
+
+```{r echo = TRUE}
+data[c(1, 2, 3, 4, 5, 28, 29, 30, 31, 32), c(1, 4)]
+```
+
+Beachte die Nummerierung der Zeilen links (1-5 und 28-32). 
+
+Wähle nun zur Übung Zeile 22, 14, 26, 18, 20 und Spalte 1, 3 und 4 aus:
+
+```{r selektion2, exercise = TRUE}
+
+```
+
+```{r selektion2-solution}
+data[c(22, 14, 26, 18, 20), c(1, 3, 4)]
+```
+
+```{r selektion2mpc, echo=FALSE}
+question(
+  "Wie oft kommt der Durchmesser 26 cm in der Auswahl vor?",
+  answer("1"),
+  answer("2", correct = T),
+  answer("3"),
+  answer("4"),
+  answer("5"),
+  answer("0"),
+  random_answer_order = T
+)
+```
+
+Negative Indices sind auch möglich. Wollen wir alle Zeilen außer die ersten 5 und alle Spalten außer Spalte 2, so nutzen wir das Minus-Zeichen ``-``, welches wir vor den Vektor setzen:
+
+```{r echo = TRUE}
+data[-c(1, 2, 3, 4, 5), -c(2)]
+```
+
+Nun Du! Wähle alle Zeilen aus, bis auf Zeilen 1 bis 20 und alle Spalten, bis auf 2 und 3. Benutze für die Zeilenauswahl den Operator ``:``. Lies Dir notfalls die Hilfe zum Doppelpunkt-Operator durch: ``?":"``.
+
+```{r selektion2a, exercise = TRUE}
+
+```
+
+```{r selektion2a-solution}
+data[-c(1:20), -c(2, 3)]
+```
+
+```{r selektion2ampc, echo=FALSE}
+question(
+  "Welche Pizza steht ganz oben bei der Selektion?",
+  answer("Cipolla", correct = T),
+  answer("Primavera"),
+  answer("Spinaci"),
+  answer("Diavolo"),
+  answer("Hawaii"),
+  answer("Speciale"),
+  random_answer_order = T
+)
+```
+
+Um Spalten zu selektieren gibt es auch noch eine andere Möglichkeit. Wollen wir wieder die ersten und letzten 5 Zeilen haben und Spalte 1 und 4, so können wir die Spalten auch direkt benennen:
+
+```{r echo = TRUE}
+data[c(1:5, 28:32), c("name", "preis_pro_kubikcm")]
+```
+
+Diese Schreibweise ist länger aber sicherer, denn egal an welcher Stelle sich die Variablen **name** und **preis_pro_kubikcm** befinden, sie werden korrekt ausgewählt. Wenn wir Zahlen benutzen, passiert schneller mal ein Fehler. Beispielsweise könnten Spalte 3 und 4 in einem zweiten Datensatz vertauscht sein:
+
+```{r echo = TRUE}
+data2 <- data[, c(1, 2, 4, 3)]
+data2
+```
+
+Die Selektion
+
+```{r echo = TRUE}
+data2[, c(1, 4)]
+```
+
+ist technisch korrekt, aber eigentlich wollten wir **preis_pro_kubikcm** als zweite Spalte, und nicht **durchmesser**. Wir müssen also in diesem Fall:
+
+```{r echo = TRUE}
+data[, c(1, 3)]
+```
+
+schreiben, oder gleich:
+
+```{r echo = TRUE}
+data[, c("name", "preis_pro_kubikcm")]
+```
+
+Was sowohl für **data1** als auch **data2** klappt. Die Lektion: Man muss viel mehr aufpassen, wenn man mit Zahlen indexiert. Dafür sind Zahlen natürlich schneller hingeschrieben. Ich empfehle: Folge der Devise "safety index" und benutze lieber die Namen der Variablen statt die Spaltennummern. Wenn Du den Code später nochmal anschaust, ist er auch viel leichter zu lesen. Du weißt sofort, was **preis_pro_kubikcm** ist, aber was Spalte 4 ist, weißt Du sicher nicht mehr.
+
+Wollen wir nur eine Spalte auswählen, so gibt es noch eine weitere Möglichkeit:
+
+```{r echo = TRUE}
+data$preis
+```
+
+Über das ``$``-Zeichen haben wir hier direkt eine Spalte angesprochen und bekommen somit einen Vektor. Werte von Vektoren lassen sich im Übrigen genau so selektieren wie Zeilen in einem Dataframe:
+
+```{r echo = TRUE}
+data$preis[c(2, 4, 6, 8, 10)]
+```
+
+Da es bei Vektoren eben nur eine Spalte gibt, muss man das Komma zwischen den eckigen Klammern weglassen! Schreibt man es hin, kommt ein Fehler. Das wird Dir bestimmt am Anfang oft passieren. Eine gute Übung um Fehlermeldungen richtig zu lesen:
+
+```{r echo = TRUE, error = TRUE}
+data$preis[c(2, 4, 6, 8, 10), ]
+```
+
+Kryptisch, oder? Eine hilfreiche Fehlermeldung wäre: "Dude, Du hast einen Vektor, tust aber so als hättest Du eine Matrix!". Dies würde allerdings andere Probleme nach sich ziehen, denn dann müsste man ``R`` viele Spezialfälle beibringen, jeder mit einem eigenen Fehler. Außerdem sieht der Computer nicht das offensichtliche, die Semantik, die der Mensch hineininterpretiert. Tatsächlich ist ``R``s Fehlermeldung auf den Punkt technisch korrekt und man kann wenig an ihr aussetzen.
+
+Üben wir nun mal die Selektion bei einem Vektor ohne Fehlermeldungen zu produzieren. Wähle die Spalte **durchmesser** aus und selektiere Zeilen 17 bis 23. Es gibt hier einige Varianten (siehe auch die nächste MPC-Aufgabe), probier also verschiedene Vorgehensweisen aus und entscheide, welche Dir am besten gefällt.
+
+```{r selektion3, exercise = TRUE}
+
+```
+
+```{r selektion3-solution}
+data$durchmesser[17:23]
+# oder
+data[17:23, "durchmesser"]
+# oder etliche andere Varianten!
+```
+
+```{r selektion4, echo=FALSE}
+question("Wie kannst Du die Variable *name* im Pizza-Datensatz auswählen? (Achtung, mehrere Antworten sind richtig!)",
+  answer("data$name", correct = TRUE),
+  answer("data[name]"),
+  answer("data[, c[\"name\"]]"),
+  answer("data[\"name\"]", correct = TRUE),
+  answer("data[, \"name\"]", correct = T),
+  answer("data[, c(\"name\")]", correct = T),
+  answer("data[1, ]"),
+  answer("data[, 1]", correct = TRUE),
+  answer("data[, -c(2, 3, 4)]", correct = TRUE),
+  random_answer_order = T
+)
+```
+
+Nach der Auswahl einer Spalte können wir natürlich eine Funktion darauf anwenden. Zum Beispiel könnten wir den Mittelwert und die Standardabweichung des Preises berechnen:
+
+```{r echo = TRUE}
+mean(data$preis)
+sd(data$preis)
+```
+
+Probier Du es nun mal. Berechne den Mittelwert für den Preis getrennt für die Durchmesser 26 und 32 cm. *Hinweis*: Zeilen 1-18 haben einen Durchmesser von 26 cm und Zeilen 19-36 einen Durchmesser von 32 cm.
+
+```{r selektion5, exercise = TRUE}
+
+```
+
+```{r selektion5-solution}
+# 26 cm
+mean(data$preis[1:18])
+# 32 cm
+mean(data$preis[19:36])
+# Hinweis: es gibt natürlich auch andere Möglichkeiten
+```
+
+```{r selektion5mpc, echo=FALSE}
+question("Was kommt heraus?",
+  answer("8.39€ und 11.89€", correct = TRUE),
+  answer("8.59€ und 11.25€"),
+  answer("6.59€ und 10.50€"),
+  answer("9.25€ und 10.25€"),
+  answer("7.50€ und 10.50€"),
+  random_answer_order = T
+)
+```
+
+Selektieren von Zeilen und Spalten ist ziemlich cool, aber in Staunen versetzen wirst Du damit höchstens Deine kleine Schwester, wohl kaum Deine Freunde. Dafür brauchst Du ein größeres Kaliber. Du greifst nach der Filter-Flinte.
+
+## Filtern
+
+Filtern ist ein großes, wichtiges Thema. Daher bietet es sich an, zunächst verschiedene Möglichkeiten des Filterns theoretisch zu besprechen und erst dann intensiv zu üben. Der nächste Part ist also etwas trockener als die bisherigen. Aber bleib am Ball, denn nach der Theorie bekommst Du einen abgefahrenen Datensatz, den Du richtig schön durchfiltern kannst.
+
+### Theorie
+
+Falls Du SPSS schon benutzt hast, kennst Du dort eventuell die Funktion *Filtern*. Damit kannst Du logische Ausdrücke erzeugen um bestimmte Zeilen in einem Datensatz auszuwählen. Das ist in ``R`` genauso. Im Gegensatz zum normalen Selektieren, gibst Du beim Filtern also für jede Zeile an, ob sie ausgegeben werden soll oder nicht. Klingt kompliziert, ist aber ganz simpel. Ein Beispiel:
+
+```{r echo = TRUE}
+mein_filter <- c(rep(TRUE, 18), rep(FALSE, 18))
+mein_filter
+data$preis[mein_filter]
+```
+
+Zunächst erzeuge ich einen Filter, der aus 18 mal wahr und 18 mal falsch besteht. Heißt einfach, dass die ersten 18 Zeilen ausgegeben werden sollen, und die letzten 18 Zeilen nicht. Den Filter wende ich auf den Vektor Preis an und zu erkennen ist, dass hier nur kleine Preise vorkommen, also nur die Pizzen mit 26 cm Durchmesser (die ersten 18 Zeilen). An diesem Beispiel sieht man, dass das Filtern und Selektieren verwandt sind. Tatsächlich haben wir im vorherigen Abschnitt, die gleiche Funktionalität über ``data$preis[1:18]`` erzielt. Viel kürzer. Also warum sollten wir so einen merkwürdigen TRUE-FALSE-Filter benutzen? Die Antwort ist, dass logische Vektoren sehr leicht zu erzeugen und zu lesen sind. Der Filter von oben lässt sich nämlich so viel einfacher schreiben:
+
+```{r echo = TRUE}
+filter_durchmesser26 <- data$durchmesser == 26
+data$preis[filter_durchmesser26]
+```
+
+Der entscheidende Part ist ``data$durchmesser == 26``. Dieses Kommando erzeugt uns einen logischen Vektor (kann nur die Werte TRUE oder FALSE annehmen). Wenn die Bedingung stimmt, dass der Durchmesser gleich 26 ist, kommt wahr heraus, wenn es nicht stimmt, kommt falsch heraus. Man beachte die zwei Gleichheitszeichen ``==``. Du wirst Dich damit noch schön herumärgern, wenn Du aus Versehen nur ein Gleichheitszeichen benutzt und ``R`` anfängt Dich zu beschimpfen.
+
+Etwas kürzer lässt sich der Filter auch ohne Zwischenschritt in einer Zeile schreiben:
+
+```{r echo = TRUE}
+data$preis[data$durchmesser == 26]
+```
+
+Und diese Zeile ist natürlich sehr schön zu lesen. Man weiß direkt was los ist. Wir wählen vom Preis nur die Elemente aus, bei denen der Durchmesser genau 26 cm ist.
+
+Das war's schon mit dem Grundprinzip vom Filtern. Aber es gibt natürlich noch viele Erweiterungen. Zunächst ist wohl klar, dass Alternativen mit Auswahl der Spalte und jeglichen anderen Kombinationen möglich sind:
+
+```{r echo = TRUE}
+data[data$durchmesser == 26, ]
+data[data$durchmesser == 32, c(1, 4)]
+```
+
+Auch ist es möglich Ungleichungen zu benutzen:
+
+```{r echo = TRUE}
+data[data$preis < 10, ]
+```
+
+Ein kleiner Test. Dein Freund aus Tag 1 wollte nicht mehr als 1.5 Cent pro Kubikzentimeter Pizza ausgeben. Welche Pizzen kommen für ihn in Frage? Erstelle für Deinen Freund eine gefilterte Speisekarte. *Hinweis*: finde zunächst das Zeichen für "kleiner gleich" heraus.
+
+```{r filtern1, exercise = TRUE}
+
+```
+
+```{r filtern1-hint}
+# "kleiner gleich" kannst Du in R einfach als <= schreiben.
+```
+
+```{r filtern1-solution}
+data[data$preis_pro_kubikcm <= 0.015, ]
+```
+
+```{r filtern1-mpc, echo=FALSE}
+question("Welche Pizzen kann Dein Freund sowohl mit Durchmesser 26 cm als auch 32 cm bestellen?",
+  answer("Nur Margherita", correct = TRUE),
+  answer("Margherita und Cipolla"),
+  answer("Margherita und Prosciutto"),
+  answer("Torita und Diavolo"),
+  answer("Nur Salsicce"),
+  random_answer_order = T
+)
+```
+
+Filter lassen sich auch kombinieren. Sagen wir mal, Dein Freund hat gerade nur 11.5€ auf der Hand, gleichzeitig will er seine 1.5 Cent pro Kubikzentimeter einhalten:
+
+```{r echo = TRUE}
+data[data$preis <= 11.5 & data$preis_pro_kubikcm <= 0.015, ]
+```
+
+Das ``&`` ist hier das logische UND. Es gibt auch das logische ODER. Ich hätte gerne Pizzen die entweder einen Durchmesser von 26 cm haben oder einen Preis pro Kubikzentimeter von kleiner als 0.0145:
+
+```{r echo = TRUE}
+data[data$durchmesser == 26 | data$preis_pro_kubikcm < 0.0145, ]
+```
+
+Das ``|`` steht also für das logische ODER.
+
+Als letztes gibt es  noch das logische NICHT, welches einfach nur den logischen Vektor umkehrt:
+
+```{r echo = TRUE}
+mein_filter <- data$preis_pro_kubikcm <= 0.015
+mein_filter
+# nun umkehren
+!mein_filter
+```
+
+Um also alle Pizzen, bei denen der Preis pro Kubikzentimeter nicht weniger als 1.5 Cent ist, auszuwählen, kann ich folgendes schreiben:
+
+```{r echo = TRUE}
+data[!(data$preis_pro_kubikcm <= 0.015), ]
+# äquivalent zu
+# data[data$preis_pro_kubikcm > 0.015, ]
+```
+
+Beachte, dass ich den Filter in Klammern setze, ansonsten denkt ``R`` ich möchte den Vektor ``data$preis_pro_kubikcm`` negieren, was natürlich nicht geht.
+
+Wie Du siehst, ist das Filtern sehr mächtig, obwohl es im Grunde darauf hinausläuft einen logischen Vektor zu erzeugen, der für jede Zeile angibt, ob diese ausgewählt wird (``TRUE``) oder nicht (``FALSE``). Die Mächtigkeit ergibt sich aus der flexiblen Erstellung dieses logischen Vektors. Jegliche Kombinationen des logischen UND (``&``), des logischen ODER (``|``) und des logischen NICHT (``!``) sind denkbar. Nun kommt der versprochene zweite Part, bei dem Du die Theorie üben kannst.
+
+### Praxis
+
+Um Deinen Freunden die massiven theoretischen Skills, die Du nun hast, zu demonstrieren, brauchst Du einen größeren Datensatz. Einen Datensatz, der bei UND ODER NICHT nicht gleich einknickt. Was passt schon besser zu einer leckeren Pizza Speciale als ein guter Film? Nur ein guter Film? Deine Freunde wollen den *besten* Film. Wir ziehen uns einen Datensatz der 5000 am besten bewerteten Filme der IMDB:
+
+```{r echo = TRUE, eval = FALSE}
+imdb <- read.csv("https://raw.githubusercontent.com/devashishpatel/IMDB-Top-5000/master/movie_metadata.csv")
+```
+
+Ah, eine neue Funktion. ``read.csv`` macht das was es sagt, es liest eine csv-Datei ein. Praktischerweise kann die Funktion auch direkt eine URL als Argument aufnehmen. Wenn Du mehr über die Funktion erfahren willst, benutze die Hilfe ``?read.csv``.
+
+Um einen Eindruck von einem unbekannten Datensatz zu bekommen, kannst Du die Funktion ``str`` (steht für *structure*) benutzen:
+
+```{r echo = TRUE}
+str(imdb)
+```
+
+Oder ``head`` um die ersten paar Zeilen auszugeben (*Hinweis*: Du kannst auf den kleinen Pfeil auf der rechten Seite klicken um weitere Variablen zu sehen):
+
+```{r echo = TRUE}
+head(imdb)
+```
+
+Einen guten Eindruck über die Art der Variablen erhält man über ``summary`` (ist hier etwas unübersichtlich, sieht im normalen ``R`` besser aus):
+
+```{r echo = TRUE}
+summary(imdb)
+```
+
+Bei so vielen Variablen und Fällen, ist Selektieren und Filtern definitiv angebracht. Ich hätte zunächst gerne alle Filme mit einem Rating (Variable **imdb_score**) von mindestens 8.9 (Die Skala geht bis 10). Gib als Variablen den **movie_title** und den **imdb_score** aus.
+
+```{r imdb, exercise = TRUE}
+
+```
+
+```{r imdb-solution}
+imdb[imdb$imdb_score >= 8.9, c("movie_title", "imdb_score")]
+```
+
+
+```{r imdb1-mpc, echo=FALSE}
+question("Welcher Film hat die höchste Bewertung?",
+  answer("Towering Inferno", correct = TRUE),
+  answer("Fargo"),
+  answer("Pulp Fiction"),
+  answer("Forrest Gump"),
+  answer("The Shawshank Redemption"),
+  random_answer_order = T
+)
+```
+
+Merkwürdig, einige der bei uns gefilterten Filme tauchen nicht auf der Top-250-Liste von IMDB auf (https://www.imdb.com/chart/top/?ref_=nv_mv_250), obwohl sie hohe Bewertungen haben. Das liegt wohl daran dass die Anzahl der Bewertungen auch eine Rolle spielt. Gib Dir zu Deinem bisherigen Dataframe zusätzlich noch die Variable **num_voted_users** aus:
+
+```{r, imdb2, exercise = TRUE}
+
+```
+
+```{r imdb2-solution}
+imdb[imdb$imdb_score >= 8.9, c("movie_title", "imdb_score", "num_voted_users")]
+```
+
+Wie viele Bewertungen hat Towering Inferno?
+
+```{r imdb2-mpc, echo=FALSE}
+question("Wie viele Personen haben eine Bewertung für den Film Towering Inferno abgegeben?",
+  answer("10", correct = TRUE),
+  answer("12590"),
+  answer("100"),
+  answer("12303"),
+  answer("9485"),
+  random_answer_order = T
+)
+```
+
+Das erklärt so einiges. Wir müssen unseren Filter verbessern. Füge über das logische UND noch einen Filter zum bisherigen hinzu: nur Filme mit mindestens 10000 Votes sollen ausgegeben werden.
+
+```{r imdb3, exercise = TRUE}
+
+```
+
+```{r imdb3-hint}
+# Das logische UND ist in R das kaufmännische Und: &
+```
+
+```{r imdb3-solution}
+imdb[imdb$imdb_score >= 8.9 & imdb$num_voted_users >= 10000, c("movie_title", "imdb_score", "num_voted_users")]
+```
+
+Das sieht schon besser aus, allerdings sind noch TV-Serien drin, in diesem Fall Dekalog, sogar 2 Mal! Wir wollen aber keine TV-Serien. Leider hat der Datensatz keine Variable, die angibt ob der "Film" ein richtiger Film ist oder nur eine Serie. Schau Dir nochmal die Variablen des Dataframes über ein Kommando Deiner Wahl an:
+
+```{r imdb3b, exercise = TRUE}
+
+```
+
+```{r imdb3b-solution}
+head(imdb)
+# es würde auch names(imdb) gehen oder andere Varianten
+```
+
+```{r imdb3-mpc, echo=FALSE}
+question("Welche Variable könnte man benutzen um TV-Serien herauszufiltern?",
+  answer("duration", correct = TRUE),
+  answer("country"),
+  answer("content_rating"),
+  answer("gross"),
+  answer("facebook_likes"),
+  random_answer_order = T
+)
+```
+
+Dann probier es mit dieser Variable aus! Füge zu unseren bestehenden Filtern noch einen hinzu. Benutze diesmal das logische UND, kombiniert mit dem logischen NICHT (``!``).
+
+```{r imdb4, exercise = TRUE}
+
+```
+
+```{r imdb4-hint}
+# Geh davon aus, dass ein Film länger als 60min dauert!
+```
+
+
+```{r imdb4-solution}
+# Ich gehe davon aus, dass eine Serie nicht länger als 60 min geht, die meisten Filme aber länger. Da wir hier das logische NIHCT üben, benutze ich NICHT kürzer oder gleich 60,
+# das ist natürlich äquivalent zu länger als 60.
+imdb[imdb$imdb_score >= 8.9 & imdb$num_voted_users >= 10000 & !(imdb$duration <= 60),
+     c("movie_title", "imdb_score", "num_voted_users")]
+```
+
+```{r imdb4-mpc, echo=FALSE}
+question("Wie viele Filme bleiben übrig?",
+  answer("9", correct = TRUE),
+  answer("8"),
+  answer("10"),
+  answer("11"),
+  answer("7"),
+  random_answer_order = T
+)
+```
+
+Unsere Liste stimmt nun überein mit der Top-250-Liste auf IMDB. Neben den schon bemerkten 2x Dekalog, ist auch Fargo rausgeflogen, denn der Film hat nur eine Bewertung von 8.1, die Serie wurde mit 9 bewertet.
+
+Eine Sortierung nach dem **imdb_score** wäre noch praktisch. Lies Dir die dazu die folgende Seite durch https://www.dummies.com/programming/r/how-to-sort-data-frames-in-r/. Sortiere nun den gefilterten Dataframe **imdbtop** nach dem **imdb_score**:
+
+```{r imdb5, exercise = TRUE}
+imdbtop <- imdb[imdb$imdb_score >= 8.9 & imdb$num_voted_users >= 10000 & !(imdb$duration <= 60), c("movie_title", "imdb_score", "num_voted_users")]
+# sortiere nun imdbtop nach dem score:
+
+```
+
+```{r imdb5-solution}
+imdbtop <- imdb[imdb$imdb_score >= 8.9 & imdb$num_voted_users >= 10000 & !(imdb$duration <= 60), c("movie_title", "imdb_score", "num_voted_users")]
+# sortiere nun imdbtop nach dem score:
+imdbtop[order(imdbtop$imdb_score, decreasing = TRUE), ]
+
+```
+
+Schöne Liste. Dann hast Du nun während der COVID-19-Pandemie endlich Zeit Deine Kulturlücken zu füllen und Dir die am besten bewerteten Filme (laut IMDB) anzuschauen.
+
+Einer Deiner Freund meint aber, dass die Auswahl nicht überzeugt. Er empfiehlt stattdessen alle Filme bei denen der Regisseur (**director_name**) Christopher Nolan oder Guy Ritchie ist. Hierfür brauchst Du das logische ODER (``|``). Probier es mal und gib als Variablen **movie_title**, **imdb_score** und **director_name** aus.
+
+```{r imdb6, exercise = TRUE}
+
+```
+
+```{r imdb6-solution}
+imdb[imdb$director_name == "Christopher Nolan" | imdb$director_name == "Guy Ritchie",
+     c("movie_title", "imdb_score", "director_name")]
+```
+
+```{r imdb6-mpc, echo=FALSE}
+question("Welcher Film in der Auswahl ist ein Duplikat (ist zweimal gelistet)?",
+  answer("Snatch", correct = TRUE),
+  answer("Interstellar"),
+  answer("Memento"),
+  answer("Swept Away"),
+  answer("The Dark Knight Rises"),
+  random_answer_order = T
+)
+```
+
+Bis auf eine Ausnahme (Swept Away lehrt uns, dass Berfüliches und Privates lieber getrennt bleiben sollten) auch keine schlechte Auswahl an Filmen. Auf jeden Fall genug Stoff für die nächsten Wochen.
+
+Bevor Du nun aber direkt mit dem ersten Film startest, machen wir noch ein Thema. Ich verspreche, dass es nicht lange dauern wird. Filtern ist nämlich nur die halbe Geschichte. Zu wissen, wie man gruppiert und aggregiert, macht Dich erst zu einem vollständigen R-Menschen.
+
+## Gruppieren und Aggregieren
+
+Üblicherweise möchte man Daten in Kategorien einteilen und für diese Kategorien Statistiken berechnen. Um uns hier etwas Arbeit zu ersparen, benutzen wir ein spezielles Paket dafür. Solche Pakete gibt es in ``R`` wie Sand am Meer und sie erleichtern die Arbeit ungemein. Wir müssen sie jedoch erst installieren und laden bevor wir sie benutzen können. Das Paket, was hier jetzt ausprobieren heißt ``psych``.
+
+Die Installation läuft über folgendes Kommando:
+
+```{r echo = TRUE, eval = FALSE}
+install.packages(psych)
+```
+
+Und laden können wir es so:
+
+```{r echo = TRUE, eval = TRUE}
+library(psych)
+```
+
+Der erste Befehl installiert das Paket, der zweite Befehl lädt es. Erst dann haben wir Zugriff auf die Funktionen des Pakets. Wenn Du R auf deinem lokalen Computer benutzt (nicht hier im Browser) musst Du Dich um die Installation von Zusatzpaketen immer selbst kümmern. Hier hab ich das über die oberen zwei Zeilen schon für Dich gemacht.
+
+Als Beispiel wollen wir herausfinden ob Schwarz-Weiß-Filme anders bewertet werden als Farbfilme:
+
+```{r echo = TRUE}
+imdb_auswahl <- imdb[, c("movie_title", "imdb_score", "duration", "color")]
+describeBy(imdb_auswahl, "color")
+```
+
+In der ersten Zeile verkleinere ich den Dataframe, ansonsten wird die ganze Geschichte sehr unübersichtlich. In der zweiten Zeile benutze ich die Funktion ``describeBy`` und übergebe als erstes Argument den Dataframe und als zweites Argument die Gruppierungsvariable (Farbfilm oder nicht, **color**). Zurück bekomme ich Statistiken für die drei Kategorien von **color**: Black and White, Color und den Rest, der nicht klassifiziert war. Was können wir erkennen? Es gibt wenige Schwarz-Weiß-Filme ($n=209$), diese liegen aber in der Bewertung über den Farb-Filmen (Mittelwert von 7.32 versus 6.41). Liegt vielleicht daran, dass es früher wenig Low-Budget-Filme gab. Entweder hat man einen passablen Film gemacht oder gar keinen.
+
+Nun Du! Selektiere zunächst aus dem Dataframe **imdb** die Variablen **imdb_score**, **movie_title** und **title_year**. Wähle anschließend alle Filme aus, die ab 2010 produziert wurden. Vergleiche schließlich den Datensatz über ``DescribeBy`` gruppiert nach dem Jahr (**title_year**):
+
+```{r aggregieren3, exercise = TRUE}
+
+```
+
+```{r aggregieren3-hint-1}
+# erster Schritt, die Auswahl der relevanten Variablen
+imdb_auswahl <- imdb[, c("imdb_score", "movie_title", "title_year")]
+```
+
+
+```{r aggregieren3-hint-2}
+# zweiter Schritt, Filter nach Jahren
+imdb_gefiltert <- imdb_auswahl[imdb_auswahl$title_year >= 2010, ]
+```
+
+```{r aggregieren3-solution}
+# erster Schritt
+imdb_auswahl <- imdb[, c("imdb_score", "movie_title", "title_year")]
+# zweiter Schritt
+imdb_gefiltert <- imdb_auswahl[imdb_auswahl$title_year >= 2010, ]
+# dritter Schritt
+describeBy(imdb_gefiltert, "title_year")
+```
+
+```{r imdb7-mpc, echo=FALSE}
+question("In welchem Jahr war die Standardabweichung des IMDB-Scores am größten?",
+  answer("2015", correct = TRUE),
+  answer("2014"),
+  answer("2011"),
+  answer("2012"),
+  answer("2013"),
+  random_answer_order = T
+)
+```
+
+Nicht schlecht! Wie versprochen, war dies nur ein kurzes Kapitel. Der Grund dafür ist, dass es noch andere Pakete gibt um Daten zu gruppieren und zu aggregieren, die wir uns später noch im Detail anschauen werden. Mit einigen Paketen ist auch das Selektieren und Filtern viel komfortabler. Früher oder später wirst Du vermutlich nur noch solche Spezial-Pakete benutzen. Am Anfang ist es aber günstig die Befehle zu benutzen die ``R`` von Haus aus anbietet, denn die meisten ``R``-Programmierer benutzen sie und Du willst ja nicht in der Out-Group sein. Nein, Quatsch. Der eigentlich Grund ist, dass Du mit diesen Menschen kommunizieren willst und sie auch mit Dir. Dafür brauchst Du die Basics. Aber sobald Du diese beherrschst, kannst Du Dein Vokabular um ein paar geschmeidigere Ausdrücke erweitern. ``describeBy`` aus dem ``psych``-Paket ist ein Beispiel dafür.
+
+Nach dem heutigen Tag solltest Du langsam ein Gespür für die Syntax von ``R`` entwickeln. Vermutlich hast Du aber auch noch viele Fragen, die Du mir gerne schicken kannst: johannes at rlernen.de
+
+Falls Du keine Fragen hast, dann hast Du jetzt die Möglichkeit Dein Wissen mit weiteren Übungsaufgaben zu festigen.
+
+## Übungsaufgaben
+
+Hinweis: Die folgenden Aufgaben stammen ursprünglich von Dr. Daniel Lüdecke und sind hier leicht adaptiert dargestellt.
+
+Da wir schon gerade bei Filmen waren. Was hältst Du von Starwars? Mäßige Geschichte mit überragender Musik? Was Du auch immer davon hältst, Starwars ist so beliebt, dass es einen Datensatz in ``R`` dazu gibt. Dieser befindet sich im Paket **dplyr**. Installieren können wir diese Paket über:
+
+```{r eval=FALSE, include=TRUE, echo = TRUE}
+install.packages("dplyr")
+```
+
+Und laden über:
+
+```{r echo = TRUE, evaluate = TRUE}
+library(dplyr)
+```
+
+Nun können wir einen Blick auf alle Datensätze in dplyr werfen (führe die nächste Zeile aus):
+
+```{r load, exercise = TRUE, evaluate = FALSE}
+data(package = "dplyr")
+```
+
+Tatsächlich ist der `starwars`-Datensatz mit dabei, den wir jetzt einfach benutzen können (führe die nächste Zeile aus):
+
+```{r headstarwars, exercise = TRUE, eval = FALSE}
+head(starwars)
+```
+
+Nun die Übungen:
+
+```{r ques1, echo=FALSE}
+question("Wie wählt man nur die Variable 'homeworld' aus dem Datensatz 'starwars' aus? Bitte *alle* korrekten Antworten angeben.",
+  answer("starwars$homeworld", correct = TRUE),
+  answer("starwars[, 10]", correct = TRUE),
+  answer("starwars[, \"homeworld\"]", correct = TRUE),
+  answer("starwars[, c(\"homeworld\")]", correct = TRUE),
+  answer("starwars[homeworld]"),
+  answer("starwars(homeworld)",),
+  answer("starwars[, 11]"),
+  answer("starwars[, -10]",)
+)
+```
+
+Wie viele Personen kommen ursprünglich vom Planeten Tatooine? *Hinweis*: Falls Du Zeilen mit ``NA``-Werten bekommst, ignoriere Sie einfach. Sie entstehen aufgrund von fehlenden Angaben im Datensatz.
+
+```{r exercise4, exercise=TRUE}
+
+```
+
+```{r exercise4-solution}
+starwars[starwars$homeworld == "Tatooine",]
+```
+
+```{r ques4, echo=FALSE}
+question("Wie viele Personen kommen ursprünglich vom Planeten Tatooine?",
+  answer("1"),
+  answer("3"),
+  answer("6"),
+  answer("10", correct = TRUE),
+  answer("12"),
+  answer("15")
+)
+```
+
+Wie heißt die erste Person im Datensatz, die größer als 2.22 m ist?
+
+```{r exercise5, exercise=TRUE}
+
+```
+
+```{r exercise5-solution}
+starwars[starwars$height > 222,]
+```
+
+```{r ques5, echo=FALSE}
+question("Wie heißt die erste Person im Datensatz, die größer als 2.22 m ist?",
+  answer("Darth Maul"),
+  answer("Ben Quadinaros"),
+  answer("Palpatine"),
+  answer("Darth Vader"),
+  answer("Qui-Gon Jinn"),
+  answer("Tarfful"),
+  answer("Chewbacca", correct = TRUE),
+  answer("Ackbar"),
+  answer("Boba Fett")
+)
+```
+
+Wie viele Fälle erhalte ich, wenn ich nach folgenden Kriterien filtere: kleiner als 1.20 m ODER von der Spezies Droide (bitte auf englische Schreibweise der Variablen-Werte achten!)? Hinweis: Falls Du Zeilen mit ``NA``-Werten bekommst, ignoriere sie einfach.
+
+```{r exercise6, exercise=TRUE}
+
+```
+
+```{r exercise6-solution}
+starwars[starwars$height < 120 | starwars$species == "Droid",]
+```
+
+```{r ques6, echo=FALSE}
+question("Wie viele Fälle erhalte ich?",
+  answer("keinen"),
+  answer("1"),
+  answer("3"),
+  answer("7"),
+  answer("11", correct = TRUE),
+  answer("15"),
+  answer("23")
+)
+```
+
+Wähle die Fälle 83 und 85 aus. Wie heißen die Personen?
+
+```{r exercise8, exercise=TRUE}
+
+
+```
+
+```{r exercise8-solution}
+starwars[c(83, 85), ]
+```
+
+```{r ques8, echo=FALSE}
+question("Wie heißen die Personen?",
+  answer("Finn und Rey"),
+  answer("Rey und BB8", correct = TRUE),
+  answer("BB8 und R2-D2"),
+  answer("R2-D2 und C-3PO"),
+  answer("C-3PO und Ben Kenobi")
+)
+```
+
+Wähle alle Fälle außer die ersten 20 aus.
+
+```{r exercise9, exercise=TRUE}
+
+
+```
+
+```{r exercise9-solution}
+starwars[-c(1:20), ]
+```
+
+```{r ques9, echo=FALSE}
+question("Wie heißt die Person in Zeile 5?",
+  answer("BB8"),
+  answer("Rey"),
+  answer("Finn"),
+  answer("Luke Skywalker"),
+  answer("Lobot", correct = TRUE),
+  answer("Ackbar"),
+  answer("Chewbacca"),
+  answer("Mon Motma")
+)
+```
+
+Wähle alle Fälle aus, deren Gewicht (`mass`) größer als 90 ist und sortiere sie aufsteigend nach dem Gewicht.
+
+```{r exercise2, exercise=TRUE}
+
+```
+
+```{r exercise2-solution}
+auswahl <- starwars[starwars$mass > 90,]
+auswahl[order(auswahl$mass), ]
+```
+
+
+```{r ques2, echo=FALSE}
+question("Welche von den ausgewählten Personen ist am schwersten?",
+  answer("IG-88"),
+  answer("Tarfful"),
+  answer("Jabba Desilijic Tiure", correct = TRUE),
+  answer("Darth Vader"),
+  answer("Grievous")
+)
+```
+
+Wie ist die Durchschnittsgröße von Männern und Frauen im Datensatz? Für die zusammenfassende Statistik sollte der Datensatz nach Geschlecht gruppiert werden. Benutze hierfür die Funktion ``describeBy`` aus dem Paket ``psych``.
+
+```{r exercise7b, exercise=TRUE, exercise.eval=FALSE, warning=FALSE}
+
+```
+
+```{r exercise7b-solution}
+data(starwars)
+auswahl <- starwars[, c("gender", "height")]
+describeBy(auswahl, "gender")
+```
+
+
+```{r ques7, echo=FALSE}
+question("Wie groß sind Frauen und Männer durchschnittlich (gerundet)?",
+  answer("Männer: 169.5 - Frauen: 164.7"),
+  answer("Männer: 179.2 - Frauen: 162.9"),
+  answer("Männer: 190.5 - Frauen: 165.5"),
+  answer("Männer: 189.3 - Frauen: 165.4"),
+  answer("Männer: 176.5 - Frauen: 164.7", correct = TRUE),
+  answer("Männer: 180.6 - Frauen: 164.7"),
+  answer("Männer: 174.8 - Frauen: 164.8")
+)
+```
+
+Klasse! Jetzt solltest Du wirklich solide Kenntnisse im Selektieren und Filtern haben. Weißt Du was das heißt? Wir können in Tag 3 anfangen richtige Methodenlehre und Statistik zu betreiben. Bis dahin, erhol Dich mal von diesem anstrengenden Tag, vielleicht mit einem guten Film.
+
+<!-- libraries laden? -->
+
+<!-- noch mehr erklären zu logischen Vektoren, class, typeof? -->
+<!-- spss daten einlesen? -->
+
+<!-- Hint: Special kommt an stelle 1 und 17 vor, -->
+
+<!-- factor(c("Windstille", "leiser Zug", "leichte Brise", "schwache Brise", "mäßige Brise"), ordered = T) -->
+
+<!-- Zu Datentypen siehe: https://jjallaire.shinyapps.io/learnr-tutorial-01-data-basics/#section-variable-types -->

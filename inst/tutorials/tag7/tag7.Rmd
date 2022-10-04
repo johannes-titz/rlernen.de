@@ -1,0 +1,315 @@
+---
+title: "Rlernen - Tag 7"
+runtime: shiny_prerendered
+output:
+  learnr::tutorial:
+    allow_skip: yes
+    progressive: no
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(qgraph) # for big5 data set
+
+knitr::opts_chunk$set(fig.width=7, fig.height=4.9)
+monate <- readr::read_csv("data/monate.csv")
+data(big5)
+mtcars_stand <- scale(mtcars)
+distance <- dist(mtcars_stand)
+```
+
+## Einführung
+
+Was ist die Kernkompetenz von Psychologen? Meiner Ansicht nach lernen Psychologen in Ihrem Studium zum Großteil Softskills wie *sich auf viele Prüfungen gleichzeitig vorbereiten*, *gute Vorträge halten* oder *Hausarbeiten schreiben*. Das lernt man auch in anderen Studiengängen. Was man jedoch in anderen Studiengängen nicht lernt ist die systematische Entwicklung von Fragebögen, die eine hohe Qualität aufweisen. Hierfür benötigt man die Faktorenanalyse, die sowohl in der Methodenlehre als auch in der Diagnostik gelehrt wird. Was Du heute lernst, wirst Du also noch häufiger im Studium sehen.
+
+Als zweites Thema und auch letztes Thema der Vorlesung Methodenlehre II, schauen wir uns auch kurz die Cluster-Analyse an. Diese wird nicht so häufig in der Psychologie verwendet, ist aber sehr praktisch und man kann damit ziemlich coole Sachen machen.
+
+## Faktoren-Analyse für schlechte Träume
+
+Hattest Du schon mal einen Alptraum? Einen lexikalischen Alptraum? Thurstone und Allport hatten davon sicher einige als sie mit Hilfe des lexikalischen Ansatzes einen Grundpfeiler der Psychologie entwickelten: das Persönlichkeitsmodell Big Five. Die Grundidee des lexikalischen Ansatzes ist, dass Persönlichkeitsmerkmale sich in der Sprache niederschlagen sollten. Schaut man sich also die Sprache an, sollte man daraus ein Persönlichkeitsmodell entwickeln können. Konkret hat man mit Tausenden von Adjektiven angefangen, diese gruppiert und reduziert. Die, die übrig geblieben sind, hat man in Fragebögen benutzt und mit diesen Daten eine Faktorenanalyse gerechnet. Heraus kamen fünf stabile Faktoren, die schon seit fast 100 Jahren Bestandteil der Psychologie sind. Eine solche Faktorenanalyse wollen wir jetzt auch rechnen.
+
+Im Paket `qgraph` finden wir die Daten `big5`:
+
+```{r eval=FALSE}
+install.packages("qgraph")
+library("qgraph")
+```
+
+Die Daten laden:
+
+```{r}
+data(big5) # wichtig!
+as.data.frame(big5) # schönerer output als bei Matrix
+```
+
+Wir sehen hier 500 Personen (Zeilen) und deren Selbst-Bewertung auf 240 Items (Spalten), die bereits einem der 5 Faktoren zugeordnet sind. Merk-Hilfe für die Faktoren: OCEAN (Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism).
+
+Und jetzt gibt es eigentlich nicht viel zu tun:
+
+```{r}
+fa <- factanal(big5, factors = 5, rotation = "varimax")
+fa$loadings
+```
+
+Das ist schon unsere Faktorenanalyse mit 5 extrahierten Faktoren und einer Varimax-Rotation. Wir bekommen die Faktorladungen und die wichtigsten Statistiken. That's it! 
+
+Naja, nicht ganz. Wir müssen die Ergebnisse natürlich auch interpretieren können. Wie sieht's mit der Varianzaufklärung aus? Die sehen wir in der Spalte `Cumulative Var` in der letzten Tabelle und mit 5 Faktoren haben wir 23.2% der Varianz erklärt. Wenn wir uns überlegen, dass wir ursprünglich 240 Items hatten, ist das sehr viel. Wenn wir uns überlegen, dass 23.2% Varianzaufklärung einer der Grundpfeiler der Psychologie sind, *hust, hust*,... lassen wir das.
+
+Wie kommt man auf die Eigenwerte (hier SS loadings, letzte Tabelle)? Die Faktorladungen über die Faktoren quadrieren und aufsummieren. Zum Beispiel für den ersten Faktor:
+
+```{r}
+sum(fa$loadings[,1]^2)
+```
+Wie kommen wir auf die Kommunalitäten? Das gleiche Prozedere wie für die Eigenwerte, nur über die Zeilen:
+
+```{r}
+sum(fa$loadings[1,]^2)
+```
+Heißt also, dass von der Gesamt-Varianz des ersten Items 31% durch die 5 Faktoren erklärt wird.
+
+Es stellt sich nun noch die Frage ob die Extraktion von 5 Faktoren gerechtfertigt ist. Hierfür können wir uns die Eigenwerte visuell anschauen und eine Parallel-Analyse durchführen. Dafür brauchen wir das Paket `psych`:
+
+```{r}
+library(psych)
+```
+
+Und nun:
+```{r echo=FALSE}
+options(mc.cores = 1)
+```
+
+```{r}
+fa.parallel(big5, fa = "fa")
+```
+
+Die Parallelanalyse schlägt 18 Faktoren vor. Man sieht bei dem Plot allerdings nicht so viel, aber wir können auch auf die einzelnen Werte von `fa.parallel` zugreifen und uns nur die ersten 30 Faktoren anschauen:
+
+```{r}
+parallel <- fa.parallel(big5, fa = "fa", plot = FALSE)
+index <- seq(30)
+plot(index, parallel$fa.values[index], type ="b", col = "blue", ylim = c(0, 20))
+points(index, parallel$fa.sim[index], type = "b", col = "red")
+```
+
+Schon besser, wir sehen nun dass ab Faktor 19 die Parallelanalyse einen größeren Eigenwert produziert als er empirisch herauskommt, deshalb extrahieren wir 18. Die Eigenwerte aus der Parallel-Analyse entstehen aus unkorrelierten Daten, rein zufällig so zu sagen. Und das ist natürlich eine sinnvolle Grenze für einen bedeutsamen Eigenwert.
+
+Übrigens, nach dem Kaiser-Kriterium könnten wir 29 Faktoren extrahieren. Die Big Five sind also tatsächlich eher ein Kompromiss aus möglichst wenig Faktoren und halbwegs guter Varianzaufklärung. Eine andere Anzahl an Faktoren wäre statistisch durchaus zu rechtfertigen, jedoch fehlt uns hier natürlich eine theoretische Betrachtung. So gibt es ja auch Facetten von den Big Five, die eben diese weiteren (Unter-)Faktoren rechtfertigen. Wir wollen hier aber nicht weiter darüber diskutieren, denn das würde den Rahmen eines `R`-Kurses sprengen.  
+
+Gut, das sind die Basics für die Faktorenanalyse und die kannst Du jetzt üben. In der Vorlesung bewerteten die Studenten wie gut ihnen die Monate des Jahres gefallen. Damit wurde dann eine Faktorenanalyse gerechnet um die vier Jahreszeiten zu extrahieren. Die Daten sind:
+
+```{r}
+monate
+```
+
+Rechne für die Daten eine Faktorenanalyse. Prüfe zuerst mit einer Parallel-Analyse wie viele Faktoren extrahiert werden sollten:
+
+```{r faparallel, exercise=TRUE}
+
+```
+
+```{r faparallel-solution}
+fa.parallel(monate, fa = "fa")
+```
+
+```{r model1-mpc1, echo=FALSE}
+question("Wie viele Faktoren sollten nach der Parallel-Analyse extrahiert werden?",
+  answer("4", correct = TRUE),
+  answer("3"),
+  answer("2"),
+  answer("1"),
+  random_answer_order = T
+)
+```
+
+```{r model1-mpc2, echo=FALSE}
+question("Wie viele Faktoren sollten nach dem Kaiser-Kriterium extrahiert werden?",
+  answer("2", correct = TRUE),
+  answer("3"),
+  answer("1"),
+  answer("4"),
+  random_answer_order = T
+)
+```
+
+Berechne nun die Faktorenanalyse und extrahiere 4 Faktoren.
+
+```{r fa, exercise=TRUE}
+
+```
+
+```{r fa-solution}
+fa <- factanal(monate, factors = 4, rotation="varimax")
+fa
+```
+
+
+```{r fa-mpc, echo=FALSE}
+question("Wie groß ist die Varianzaufklärung durch die 4 Faktoren",
+  answer(".553", correct = TRUE),
+  answer(".089"),
+  answer("1.074"),
+  answer("0.877"),
+  random_answer_order = T
+)
+```
+
+Berechne nun die Kommunalitäten der Monate (Hinweis: benutze die Funktion `rowSums`):
+
+```{r fa-komm, exercise=TRUE}
+
+```
+
+```{r fa-komm-solution}
+fa <- factanal(monate, factors = 4, rotation="varimax")
+sort(rowSums(fa$loadings^2))
+```
+
+
+```{r fa-komm-mpc, echo=FALSE}
+question("Welcher Monat lässt sich am schlechtesten durch die 4 Faktoren erklären?",
+  answer("Dezember", correct = TRUE),
+  answer("Januar"),
+  answer("November"),
+  answer("September"),
+  random_answer_order = T
+)
+```
+
+## Cluster-Analyse
+
+Die Cluster-Analyse kann für ähnliche Zwecke wie die Faktorenanalyse verwendet werden. Schauen wir uns nochmal die Jahreszeiten an. Wir berechnen zunächst die Korrelation zwischen allen Monatspaaren (was übrigens auch der Ausgangspunkt für die Faktorenanalyse ist, wenn man sie *händisch* rechnet):
+
+```{r}
+cors <- cor(monate)
+cors
+```
+
+Nun die Cluster-Analyse:
+
+```{r}
+fit <- hclust(dist(cors), method = "ward.D")
+plot(fit)
+```
+
+Über `dist` wandeln wir die Korrelationsmatrix in eine Distanzmatrix um. Nach der Berechnung plotten wir das Ergebnis und bekommen die erwartete Einteilung der vier Jahreszeiten. Was stellt die $y$-Achse dar? Die Höhe gibt den Abstand zwischen den Clustern an, ist hier jedoch schwer zu interpretieren. Man kann aber zumindest sagen, dass sich zum Beispiel Januar und Februar sehr ähneln weil ihre Distanz gering ist. Hingegen Sommer-Monate und nicht-Sommer-Monate einen sehr großen Abstand voneinander haben. Die Einteilung in nur zwei Cluster ist natürlich auch möglich, wäre aber auch bei der Faktoren-Analyse eine sinnvolle Lösung gewesen.
+
+Wir können das Dendrogramm nun noch abschneiden und die Cluster hervorheben:
+
+```{r}
+groups <- cutree(fit, k = 4)
+groups
+plot(fit)
+rect.hclust(fit, k = 4, border = "blue")
+```
+
+Der hier verwendete Algorithmus ist nur einer aus Dutzenden. Üblicherweise würde man verschiedene Algorithmen miteinander vergleichen und schauen ob sie zu ähnlichen Ergebnissen führen. Aber interessanter ist wohl sich Gedanken über das Distanzmaß zu machen. Hier haben wir einen Spezialfall bei dem wir die Korrelation in eine Distanz umgewandelt haben. Wenn wir gewusst hätten, dass wir mit den Daten eine Cluster-Analyse rechnen, hätten wir andere Fragen stellen müssen. Zum Beispiel wie ähnlich sich zwei Monate sind. Die Faktorenanalyse ist also das passendere Verfahren für die Vorlesungsbefragung, aber man sieht, dass die Cluster-Analyse zum gleichen Ergebnis führt. 
+
+Schauen wir uns noch ein zweites, passenderes Beispiel an. Wir kennen ja schon den Datensatz zu Autos aus den 1974er Jahren `mtcars`: 
+
+```{r}
+as.data.frame(mtcars)
+```
+
+Den wollen wir jetzt mal Clustern. Im Gegensatz zum letzten Beispiel müssen wir hier nicht mit Korrelationen arbeiten, sondern können direkt die Distanz berechnen. Allerdings haben wir hier mehrere Variablen, die alle in eine einzige Distanz pro Paar eingehen. Da die Variablen auf unterschiedlichen Skalen sind, würde man sie üblicherweise zunächst $z$-standardisieren und erst dann die Distanz berechnen. Also los, $z$-standardisiere alle Variablen und berechne dann mit `dist` die Distanz. 
+
+```{r mtcars, exercise=TRUE}
+
+```
+
+```{r mtcars-solution}
+mtcars_stand <- scale(mtcars)
+distance <- dist(mtcars_stand)
+as.data.frame(as.matrix(distance))
+```
+
+```{r mtcars-mpc, echo=FALSE}
+question("Zwischen welchen Autos ist die Distanz am größten?",
+  answer("Maserati Bora und Toyota Corolla", correct = TRUE),
+  answer("Hornet 4 Drive und Valiant"),
+  answer("Fiat X1-9 und Volvo 142E"),
+  answer("Honda Civic und Fiat 128"),
+  random_answer_order = T
+)
+```
+
+Und nun Clustere über `hclust` mit der Methode `ward.D` und gib eine Dendrogramm aus.
+
+```{r mtcars2, exercise=TRUE}
+
+```
+
+```{r mtcars2-solution}
+fit <- hclust(distance, method = "ward.D")
+plot(fit)
+```
+
+```{r mtcars2-mpc, echo=FALSE}
+question("Wenn man bei einer Distanz von 30 abschneidet, wie viele Cluster entstehen dann?",
+  answer("2", correct = TRUE),
+  answer("1"),
+  answer("3"),
+  answer("4"),
+  random_answer_order = T
+)
+```
+
+```{r mtcars2-mpc2, echo=FALSE}
+question("Welche Auto ist dem Toyota Corolla am ähnlichsten?",
+  answer("Fiat 128", correct = TRUE),
+  answer("Toyota Corona"),
+  answer("Merc 230"),
+  answer("Valiant"),
+  random_answer_order = T
+)
+```
+
+Extrahiere nun 3 Cluster und zeige an, wie viele Autos pro Cluster entstehen. 
+
+```{r mtcars3, exercise=TRUE}
+
+```
+
+```{r mtcars3-solution}
+fit <- hclust(distance, method = "ward.D")
+groups <- cutree(fit, 3) 
+table(groups)
+```
+
+```{r mtcars2-mpc3, echo=FALSE}
+question("Zu welchem Cluster gehört der Maserati Bora?",
+  answer("1", correct = TRUE),
+  answer("2"),
+  answer("3"),
+  answer("4"),
+  random_answer_order = T
+)
+```
+
+Sehr gut! Du hast nun gelernt wie man eine einfache Cluster-Analyse in `R` rechnen kann und wie man ein Dendrogramm erstellt. Das soll es für heute auch schon gewesen sein. Willst Du Dich intensiver mit der Cluster-Analyse beschäftigen, wirst Du online viele Materialien finden. Das gleiche trifft auch auf die Faktorenanalyse zu. Einen Tipp gebe ich aber trotzdem noch: Das Buch *Multivariate Analysemethoden* von Backhaus und Kollegen gibt ausgezeichnete Einführungen in beide Themen. Auch die ANOVA ist dort sehr intuitiv erklärt. Ein Must-Have für die Methodenlehre!
+
+## Ausblick
+Statt weitere Übungsaufgaben zu rechnen, schauen wir uns heute mal kurz an was wir in diesem Kurs gelernt haben und was Du als nächstes in Deiner `R`-Karriere machen solltest.
+
+Wir haben uns zum Großteil an der Vorlesung Methodenlehre II orientiert und die meisten statistischen Verfahren, die in der Psychologie verwendet werden, kurz abgehandelt. Dazu zählen natürlich $t$-Test, ANOVA und prominente non-parametrische Verfahren. Das alles haben wir sowohl für unabhängige als auch abhängige Stichproben gemacht. Eine Besonderheit stellt die Kontrast-Analyse dar, die sehr nützlich ist, aber leider kaum verwendet wird, da sie den meisten nicht bekannt ist. 
+
+Anschließend haben wir uns intensiv mit der Regression befasst, wohl das wichtigste Thema der Methodenlehre. Zum Schluss haben wir uns die Faktoren- und Cluster-Analyse angeschaut. Neben den statistischen Verfahren, weißt Du auch wie Du einfache Abbildungen erstellst, Daten selektierst und filterst und eigene Funktionen schreibst. 
+
+Das ist insgesamt ganz schön viel für einen halben Kurs (zweiwöchig), Du bist also gut gerüstet für die nächsten statistisch-analytischen Schlachten. Aber Du solltest Dich auch nicht überschätzen. Es gibt noch viel zu lernen. Was solltest Du als nächstes tun?
+
+Falls Du es noch nicht getan hast, installiere Dir `R` und Rstudio auf deinen Rechner: https://jjallaire.shinyapps.io/learnr-tutorial-00-setup/ 
+
+Probiere dann aus, ob Du die Übungsaufgaben, die wir hier durchgearbeitet haben, auch lokal (auf Deinem Rechner) nachvollziehen kannst.
+
+Lerne wie Du Daten einliest (z. B. https://www.datacamp.com/community/tutorials/r-data-import-tutorial).
+
+Lerne `dplyr` und `ggplot2`. Tutorials dafür gibt es wie Sand am Meer. 
+
+Schaue Dir Videos auf Youtube zu `R` an.
+
+Lies Dir Blogs zu `R` auf https://www.r-bloggers.com durch.
+
+Lies Dir Fragen zu `R` auf https://www.stackoverflow.com durch. Melde Dich dort an und stelle eigene Fragen.
+
+Kauf Dir ein `R`-Buch und arbeite es durch. *R in Action* von Matloff oder *A handbook of statistical anylses using R* von Hothorn sind zwei mögliche Kandidaten.
+
+All das wird notwendig sein, wenn Du wirklich gut werden willst! Dein Mindset sollte sein: Wie mache ich das in `R`? Welche Varianten gibt es eine bestimmte Analyse oder Berechnung durchzuführen? Schreibe ich guten Code? Wie schreibe ich besseren Code? Wenn Du stetig an Deinen `R`-Skills arbeitest, dauert es nicht mehr lange, bis andere Dich fragen, ob Du ihnen bei einem `R`-Problem helfen kannst. Du wirst eventuell auch kleinere Projekte übernehmen und dafür Geld verlangen können. Und irgendwann schreibst Du vielleicht sogar Deine eigenen `R`-Packages.  (☉_☉)

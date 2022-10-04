@@ -1,0 +1,530 @@
+---
+title: "Rlernen - Tag 5"
+runtime: shiny_prerendered
+output:
+  learnr::tutorial:
+    allow_skip: yes
+    progressive: no
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+
+library(WebPower)
+library(ppcor)
+
+knitr::opts_chunk$set(fig.width=7, fig.height=4.9)
+
+# Daten für Gutachter-Aufgabe
+a <- c(19, 27, 9, 13, 8, 27)
+b <- c(25, 26, 24, 15, 9, 4)
+gutachter <- matrix(a+b, nrow=2, byrow=T)
+colnames(gutachter) <- c("Plant Relocation", "Tax evasion", "Independence")
+gutachter <- as.data.frame(gutachter, row.names = c("Recognize", "Do not recognize"))
+gutachter
+
+# Daten für Simpsons Paradox
+a <- c(820, 80, 680, 20)
+b <- c(20, 80, 100, 200)
+simpsonsparadox <- matrix(a+b, nrow=2, byrow=T)
+colnames(simpsonsparadox) <- c("Accept", "Reject")
+simpsonsparadox <- as.data.frame(simpsonsparadox, row.names = c("Male", "Female"))
+simpsonsparadox
+
+# Daten für U-Test
+solved_female <- c(24, 20, 18, 17, 15, 15, 14, 14, 14, 13, 13, 11, 11, 10, 9, 
+                   9, 8, 8, 8, 8, 8, 8, 8, 7, 7, 7, 7, 7, 4, 4)
+solved_male <- c(22, 21, 21, 21, 19, 19, 17, 17, 17, 17, 17, 18, 16, 16, 16,
+                 15, 15, 15, 15, 13, 13, 13, 12, 11, 11, 11, 10, 10, 8, 5)
+
+# Daten für Partialkorrelation Vorlesung
+vl <- matrix(c(1, .43, -.51, -.54, .43, 1, .41, -.12, -.51, .41, 1, .23, -.54, -.12, .23, 1), ncol = 4)
+row.names(vl) <- c("Gewichtsverlust", "Sport", "Kalorienaufnahme", "Alter")
+colnames(vl) <- c("Gewichtsverlust", "Sport", "Kalorienaufnahme", "Alter")
+vl
+
+# Daten für Wilcoxon-Test
+gewicht_t1 <- c(58, 55, 60, 52, 53, 53, 55, 49, 50, 55)
+gewicht_t2 <- c(61, 60, 64, 56, 59, 60, 59, 47, 52, 56)
+
+data <- readRDS("data/ws19.RData")
+```
+
+## Einführung
+Leider musst Du Dich heute noch weiter mit statistischen Tests beschäftigen, genauer gesagt nonparametrischen Tests. Diese verwenden wir, wenn die untersuchten Variablen kein Intervallskalenniveau haben oder die Voraussetzungen für einen statistischen Test nicht erfüllt sind (z. B. keine Normalverteilung in der Population). Dazu gibt es zwei Dinge zu sagen: (1) in der Psychologie wird das Intervallskalenniveau so gut wie nie erreicht -- die Psychologen tun aber gerne trotzdem so als ob, sie "spielen" Intervallskalenniveau. (2) Bootstrapping und Permutationstests wären eigentlich die bessere Alternative um das Problem zu lösen, werden aber erst im Masterstudium ausführlich behandelt.
+
+Man könnte vermuten, dass es es keinen guten Grund gibt statistische Tests so zu lernen wie wir das gerade tun. Stattdessen könnte man direkt mit Bootstrapping anfangen und hätte die komplette Inferenzstatistik in 2-3 Vorlesungen abgehandelt und alles unter dem Hut eines einzigen Konzepts, statt einem Dutzend verschiedener Tests. Warum tun wir das (noch) nicht? Weil in der Literatur immer noch die klassischen Tests verwendet werden und Du für Dein empirisch-experimentelles Praktikum und Deine Abschlussarbeit die Literatur lesen und verstehen musst. Die Trägheit des Systems ist also Schuld daran, dass Du Deine kostbare Lebenszeit verschwenden musst. Nun ja, ganz verschwendet ist sie vielleicht nicht, denn zumindest lernst Du hier die Universalsprache `R`.
+
+Da es also wieder etwas öde wird, hab ich als kleinen Höhepunkt die Poweranalyse in dieser Sitzung integriert. Außerdem schauen wir uns auch kurz die Lowess-Kurve und Partialkorrelationen an. Diese Themen sind etwas willkürlich gewählt, aber für eine Rfrischung sehr gut geeignet.
+
+Wir verwenden übrigens wieder die Vorlesungsdaten:
+
+```{r, eval=FALSE}
+data <- read.csv("https://www-user.tu-chemnitz.de/~titz/data4.csv")
+```
+
+```{r}
+data
+```
+
+## Nonparametrische Tests
+
+### $\chi^2$-Test
+
+Wir stellen uns am Anfang eine ganz wichtige Frage! Ist die Ernährungsweise unabhängig vom Geschlecht? Ja, diese Frage ist wichtig. Das wichtige an ihr für uns ist vor allem, dass sie sich wunderbar für einen $\chi^2$-Test eignet.
+
+```{r, chisq-demo}
+result <- chisq.test(data$Geschlecht, data$Vegetarier)
+result
+result$observed
+```
+
+Wie zu erwarten: Männer wollen immer noch ihr Steak. Der Effekt ist gar nicht klein und auf einem $\alpha$-Niveau von 5\% haben wir ein signifikantes Ergebnis. Aufpassen müssen wir, wenn wir das Ergebnis per Hand nachrechnen wollen, denn man sieht im Output, dass hier noch eine Korrektur verwendet wird, die zu einem genaueren $p$-Wert führt. Problem ist, dass sich dadurch der $\chi^2$-Wert verändert und der Effekt würde falsch berechnet werden:
+
+```{r chisq-effect}
+sqrt(3.9077/107) # für Effektgröße w und bei 2x2-Tabelle ist das auch Phi
+```
+
+Tatsächlich ist der Effekt:
+
+```{r chisq-actual-effect}
+cor(as.numeric(as.factor(data$Geschlecht)), as.numeric(as.factor(data$Vegetarier)))
+```
+Wobei hier die spezifische Kodierung zu einem negativen Effekt führt, was für uns allerdings keine Rolle spielt, denn wir sehen aus der Tabelle, dass Frauen eher Vegetarier sind als Männer. Die komischen `as.factor` und `as.numeric` sind hier notwendig, denn das Geschlecht und die Ernährungsweise sind als Characters gespeichert (ist nicht so wichtig, nur falls es Dich interessiert). 
+
+Wie kommen wir über den $\chi^2$-Wert auf den richtigen Effekt? Einfach die Korrektur abschalten:
+
+```{r chisq-correct}
+chisq.test(data$Geschlecht, data$Vegetarier, correct = FALSE)
+```
+Und nun passt die Formel:
+
+```{r chisq-correct-effect}
+sqrt(5.0244/107)
+```
+Die Detektivarbeit war erfolgreich und wir sehen auch, dass die Korrelation äquivalent zur Effektgröße $\Phi$ und $w$ ist – zumindest für 2×2-Tabellen. Jetzt bist Du dran. In der Übung zur Methodenlehre haben wir aus einem Artikel folgende Tabelle extrahiert:
+
+```{r prepare-tax-data}
+a <- c(19, 27, 9, 13, 8, 27)
+b <- c(25, 26, 24, 15, 9, 4)
+gutachter <- matrix(a+b, nrow=2, byrow=T)
+colnames(gutachter) <- c("Plant Relocation", "Tax evasion", "Independence")
+gutachter <- as.data.frame(gutachter, row.names = c("Recognize", "Do not recognize"))
+gutachter
+```
+
+Es ging um die Frage ob Gutachter ethische Probleme in Finanz-Anträgen identifizieren können. Es gab drei Szenarien (in den Spalten) und als AV wurde erfasst, ob das Problem erkannt wurde oder nicht. Man kann schon nach einem kurzen Blick erkennen, dass bei Steuerhinterziehung die Erkennungsrate am höchsten ist. Die Frage ist generell, ob es Unterschiede in der Erkennungsrate zwischen den Szenarien gibt. Als $\chi^2$-Wert kam im Paper 8.6 heraus. Prüfe diesen nach:
+
+```{r chisq, exercise=TRUE}
+
+```
+
+```{r chisq-solution}
+chisq.test(gutachter)
+```
+
+```{r chisq-mpc, echo=FALSE}
+question("Wie groß ist der $p$-Wert?",
+  answer("0.0138", correct = TRUE),
+  answer("0.0217"),
+  answer("0.0326"),
+  answer("0.0435"),
+  answer("0.0544"),
+  random_answer_order = T
+)
+```
+
+```{r chisq-mpc2, echo=FALSE}
+question("Wäre es hier möglich die Effektgröße $\\Phi$ zu berechnen?",
+  answer("Nein, das geht nur bei $2\\times2$-Tabellen.", correct = TRUE),
+  answer("Ja und der Effekt wäre ungefähr 0.20"),
+  answer("Ja und der Effekt wäre ungefähr -0.20"),
+  answer("Nein, da der $\\chi^2$-Wert eine Korrektur enthält."),
+  answer("Nein, denn das Ergebnis ist nicht signifikant."),
+  random_answer_order = T
+)
+```
+
+```{r chisq-mpc3, echo=FALSE}
+# question("Für welches Skalenniveau ist der $\\chi^2$-Test geeignet?",
+#          answer("Nominal", correct = T),
+#          answer("Ordinal"),
+#          answer("Interval"),
+#          answer("Verhältnis"),
+#          random_answer_order = T)
+```
+
+### $U$-Test
+
+Wir haben an Tag 4 einen $t$-Test gerechnet um zu prüfen, ob sich die Körpergröße zwischen Männern und Frauen unterscheidet. Die Voraussetzungen für diesen Test sind vielleicht nicht erfüllt. Eine Alternative ist hier der $U$-Test, der in `R` jedoch unter dem Wilcoxon-Test läuft (dieser ist eigentlich für abhängige Stichproben, stellt man auf unabhängig, bekommt man den $U$-Test):
+
+```{r u-demo}
+m <- data[data$Geschlecht == "männlich", "groesse"]
+w <- data[data$Geschlecht == "weiblich", "groesse"]
+wilcox.test(m, w, paired = FALSE) # paired = FALSE ist der default, kann man also auch weglassen
+```
+Im Output sieht man mal wieder, dass eine Korrektur angewandt wird. Wenn Du also was per Hand rechnest, vergiss nicht die Korrektur auszustellen. Übrigens ist $W$ hier die Teststatistik, die wir eigentlich als $U$ kennen.
+
+Ist gar nicht schwer, oder? Das kannst Du auch. In der Übung haben wir uns ein Paper angeschaut, bei dem es um die Frage ging ob Frauen und Männer in unterschiedlichen Umwelten (friedlich oder kompetitiv) besser oder schlechter performen. Im Folgenden findest Du die Anzahl der gelösten Aufgaben:
+
+```{r prepare-gneezy}
+solved_female <- c(24, 20, 18, 17, 15, 15, 14, 14, 14, 13, 13, 11, 11, 10, 9, 
+                   9, 8, 8, 8, 8, 8, 8, 8, 7, 7, 7, 7, 7, 4, 4)
+solved_male <- c(22, 21, 21, 21, 19, 19, 17, 17, 17, 17, 17, 18, 16, 16, 16,
+                 15, 15, 15, 15, 13, 13, 13, 12, 11, 11, 11, 10, 10, 8, 5)
+```
+
+Rechne den $U$-Test für den Vergleich zwischen Männern und Frauen. Stell hier die Korrektur aus, sodass der gleiche Wert herauskommt wie bei der Berechnung per Hand in der Übung.
+
+```{r utest, exercise=TRUE}
+
+```
+
+```{r utest-solution}
+wilcox.test(solved_female, solved_male, correct = FALSE)
+```
+
+```{r utest-mpc, echo=FALSE}
+question("Wie groß ist der $U$-Wert (ohne Korrektur)?",
+         answer("211.5", correct = T),
+         answer("1793.5"),
+         answer("153.7l"),
+         answer("-113.3"),
+         answer("-173.9"),
+         random_answer_order = T)
+```
+
+### Wilcoxon-Test 
+
+Wir haben an Tag 4 auch einen $t$-Test gerechnet um zu prüfen, ob sich die Deutsch- und Mathepunkte unterscheiden. Die Voraussetzungen für diesen Test sind jedoch sehr wahrscheinlich nicht erfüllt. Eine Alternative ist hier der Wilcoxon-Test: 
+
+```{r wilcox-demo}
+wilcox.test(data$Mathe, data$Deutsch, paired = TRUE)
+```
+Die Test-Statistik ist hier $V$, wir kennen sie unter $T$.
+
+Die entscheidende Frage ist, wie weit der $p$-Wert dieses Tests vom $p$-Wert des $t$-Tests entfernt ist:
+
+```{r wilcox-diff-t-test}
+t.test(data$Mathe, data$Deutsch, paired = TRUE)
+```
+
+Tatsächlich macht das hier einen großen Unterschied (0.202 versus 0.1076)! Das ist jedoch nicht immer so, man sollte sich aber auf jeden Fall Gedanken machen auf welchem Skalenniveau man misst und ob die Voraussetzungen für einen Test näherungsweise gegeben sind. Ist dies nicht der Fall, so ist man mit den nonparametrischen Tests auf der sicheren Seite. Wie schon erwähnt, die eigentlich bessere Alternative ist Bootstrapping und Randomisierungstests, aber die behandeln wir erst im Master.
+
+Interessant wäre hier noch zu schauen, wie groß der Unterschied zu einem unabhängigen Test ist ($U$-Test):
+
+```{r wilcox-diff-independent}
+wilcox.test(data$Mathe, data$Deutsch, paired = FALSE)
+```
+
+Macht einen noch größeren Unterschied (0.202 versus 0.4648)! Das sollte klar sein, denn bei abhängigen Stichproben sind die Effekte immer größer und man sollte das hier nicht verschenken. Im umgekehrten Fall sollte man auch nie unabhängige Stichproben als abhängige behandeln; das wäre sogar grob fahrlässig!
+
+In der Übung hatten wir auch einen Wilcoxon-Test gerechnet. Es ging um eine neue Therapieform bei Anorexie-Patienten. Gemessen wurde das Körpergewicht in kg vor und nach der Therapie. Die Daten waren:
+
+```{r prepare-uebung-wilcox}
+gewicht_t1 <- c(58, 55, 60, 52, 53, 53, 55, 49, 50, 55)
+gewicht_t2 <- c(61, 60, 64, 56, 59, 60, 59, 47, 52, 56)
+```
+
+Prüfe nach ob Du auf das selbe Ergebnis kommst wie in der Übung (wir haben einseitig getestet, auf eine Erhöhung des Gewichts):
+
+```{r wilcox, exercise=TRUE}
+
+```
+
+```{r wilcox-solution}
+wilcox.test(gewicht_t2, gewicht_t1, paired = TRUE, alternative="greater", correct = FALSE)
+```
+
+```{r wilcox-mpc, echo=FALSE}
+question("Wie groß ist der $T$-Wert (ohne Korrektur)?",
+         answer("52.5", correct = T),
+         answer("22.3"),
+         answer("10.5"),
+         answer("34.4"),
+         answer("73.9"),
+         random_answer_order = T)
+```
+
+Sehr gut! Jetzt haben wir aber wirklich alle Signifikanztests der Vorlesung behandelt. Ich hoffe ich habe nichts vergessen, wenn doch, dann schreib mir bitte eine Mail (johannes @ rlernen.de). 
+
+Das war gerade harte Arbeit und jetzt kommt die Belohnung. Poweranalyse :). Klingt wohl eher nach noch mehr Arbeit, aber bevor Du zu nicht-freier, unmoralischer Software wie G\*Power greifst, investiere lieber noch 30 Minuten in `R`!
+
+## Power-Analyse
+Wir müssen zunächst ein Paket installieren. Ich benutze `WebPower` (gute Alternativen gibt es, benutze aber bitte nicht G\*Power, das ist nämlich keine freie Software): 
+
+```{r eval=FALSE}
+install.packages("WebPower")
+```
+
+Nun laden wir das Paket:
+
+```{r}
+library(WebPower)
+```
+
+Mit WebPower sind wir zu einer Supermacht aufgestiegen. Power für Korrelationen:
+
+```{r}
+wp.correlation(r = .3, power = .8, alternative = "greater")
+wp.correlation(r = .3, power = .8, alternative = "two.sided")
+```
+
+Wir geben also die Effektgröße, die gewünschte Power und die Alternativhypothese (einseitig, zweiseitig) an und bekommen die Stichprobengröße heraus. Nicht übel.
+
+Diese Syntax funktioniert für alle möglichen Tests. Zum Beispiel $t$-Test:
+
+```{r}
+wp.t(d = 0.5, power = .9, type = "two.sample")
+```
+
+Bei der ANOVA müssen wir allerdings die Effektgröße, die uns bekannt ist ($\eta^2$) in $f$ umwandeln. Ist ja aber in `R` ein Klacks:
+
+```{r}
+eta_squared <- .1
+f <- sqrt(eta_squared/(1-eta_squared))
+wp.anova(k = 3, power = .7, f = f)
+```
+
+Wobei hier $k$ die Anzahl der Gruppen ist.
+
+Okay, dann kannst Du jetzt mal ein bisschen üben:
+
+In der Vorlesung zur ANOVA wurde eine Tabelle für die Power präsentiert (Folie 14). Prüfe die Werte nach für ein $2\times2$-Design, ein $\eta^2=0.06$, und die Stichprobengrößen (pro Gruppe) 30, 40 und 50 (In der Vorlesung sind diese als 0.78, 0.88 und 0.94 angegeben). *Hinweis*: Du musst in diesem Fall die Funktion `wp.kanova` benutzen. Lies in der Hilfe oder im Web nach, was die Parameter bedeuten.
+
+```{r powervorlesung, exercise=TRUE}
+
+```
+
+```{r powervorlesung-solution}
+eta_squared <- .06
+f <- sqrt(eta_squared/(1-eta_squared))
+wp.kanova(n = 120, ndf = 1, f=f, ng = 4)
+wp.kanova(n = 160, ndf = 1, f=f, ng = 4)
+wp.kanova(n = 200, ndf = 1, f=f, ng = 4)
+```
+
+```{r powervorlesung-mpc, echo=FALSE}
+question("Für welche Stichprobengröße (pro Gruppe) wurde die Power in der Vorlesung anscheinend falsch gerundet?",
+         answer("40", correct = T),
+         answer("30"),
+         answer("50"),
+         answer("Alle Werte sind korrekt gerundet."),
+         answer("Keiner der Werte ist korrekt gerundet."),
+         random_answer_order = T)
+```
+
+```{r powervorlesung-mpc2, echo=FALSE}
+question("Warum könnte die Ungenauigkeit aus der letzten Aufgabe gewollt sein?",
+         answer("Die Power wird so nicht überschätzt.", correct = T),
+         answer("Die Power wird so nicht unterschätzt."),
+         answer("Eine kleinere Power ist für den Forscher wünschenswert."),
+         answer("Die Angabe ohne Kommastellen ist komfortabler."),
+         answer("Rundungsfehler gleichen andere Arten von Fehler (z. B. Messfehler) zufällig wieder aus."),
+         random_answer_order = T)
+```
+
+Du planst eine eigene Studie und gehst von einem Effekt von $d=0.6$ aus, das $\alpha$-Niveau legst Du auf 0.10 fest. Du würdest gerne wissen wie groß die Power Deiner Studie in Abhängigkeit der Stichprobengröße ist. Dafür willst Du gerne eine Abbildung erstellen, auf der $x$-Achse die Stichprobengröße und auf der $y$-Achse die Power. Die minimale Stichprobengröße soll 10 sein, die maximale 500 (in 10er-Schritten). Erstelle mit Hilfe der Funktion `wp.t` zunächst die Daten, greife dann auf die Stichprobengröße und Power zu und erstelle, die Abbildung.
+
+```{r powerstudie, exercise=TRUE}
+
+```
+
+```{r powerstudie-solution}
+power <- wp.t(d = 0.6, n1 = seq(10, 500, 10), type = "two.sample")
+plot(power$n, power$power, type = "b")
+```
+
+```{r powerstudie-mpc, echo=FALSE}
+question("Wie steigt/fällt die Power in Abhängigkeit der Stichprobengröße?",
+         answer("Mit steigender Stichprobengröße nimmt die Power zu, aber die Zuwächse werden immer kleiner.", correct = T),
+         answer("Mit steigender Stichprobengröße nimmt die Power ab, aber die Abnahmen werden immer kleiner."),
+         answer("Mit steigender Stichprobengröße nimmt die Power ab und die Abnahmen werden immer größer."),
+         answer("Mit steigender Stichprobengröße nimmt die Power zu und die Zuwächse werden immer größer."),
+         random_answer_order = T)
+```
+
+Nicht schlecht! Für heute bleiben uns noch zwei kleine Themen, die irgendwie nirgends richtig dazugehören: die Lowess-Kurve und die Partialkorrelation.
+
+## Lowess-Kurve 
+
+Wir schauen uns nochmal den Zusammenhang zwischen den Mathe- und Deutschpunkten an, diesmal jedoch mit einer Lowess-Kurve:
+
+```{r}
+sunflowerplot(data$Mathe, data$Deutsch)
+lines(lowess(x = data$Mathe, y = data$Deutsch))
+```
+
+Standardmäßig ist $f=2/3$, je kleiner der Wert ist, desto zackiger (lokaler) wird das Smoothing:
+
+```{r}
+sunflowerplot(data$Mathe, data$Deutsch)
+lines(lowess(x = data$Mathe, y = data$Deutsch))
+lines(lowess(x = data$Mathe, y = data$Deutsch, f = 0.4), col = "green")
+lines(lowess(x = data$Mathe, y = data$Deutsch, f = 0.2), col = "blue")
+```
+
+Erstelle nun Du einen Plot für den Zusammenhang zwischen dem Mögen von Hunden ($x$-Achse) und dem Mögen von Katzen ($y$-Achse) mit einer Lowess-Kurve ($f=2/3$):
+
+```{r lowess, exercise=TRUE}
+
+```
+
+```{r lowess-solution}
+sunflowerplot(data$Hunde_m, data$Katzen_m)
+lines(lowess(x = data$Hunde_m, y = data$Katzen_m))
+```
+
+```{r lowess-mpc, echo=FALSE}
+question("Wie lässt sich der Zusammenhang zwischen dem Mögen von Hunden und Katzen beschreiben?",
+         answer("Bis zu einem mittleren Niveau ist der Anstieg positiv und fällt dann wieder leicht ab.", correct = T),
+         answer("Der Zusammenhang ist positiv und linear."),
+         answer("Der Zusammenhang ist negativ und linear."),
+         answer("Bis zu einem mittleren Niveau ist der Anstieg negativ und steigt dann wieder leicht an."),
+         random_answer_order = T)
+```
+
+## Partialkorrelation
+
+Hierzu gibt es nicht viel zu sagen. Wir verwenden einfach die Funktion `pcor.test` aus dem Paket `ppcor`:
+
+```{r, eval=FALSE}
+install.packages("ppcor")
+```
+
+Wir laden das Paket:
+
+```{r}
+library(ppcor)
+```
+
+Fürs Beispiel aus der Vorlesung:
+
+```{r}
+verb_test  <- c(4, 5, 6, 7, 8, 10, 11, 12, 14, 15)
+num_test <- c(5, 6.5, 7, 5.5, 9, 6.5, 8, 10.5, 8, 10)
+iq <- c(98, 98, 103, 101, 100, 106, 111, 125, 120, 115)
+pcor.test(verb_test, num_test, iq) 
+```
+
+Herauspartialisiert wird der IQ aus dem Zusammenhang zwischen einen verbalen und numerischem Test.
+
+Probier Du es nun. Berechne die Partialkorrelation zwischen Deutsch- und Mathepunkten ohne den Einfluss der Abiturnote:
+
+```{r partial, exercise=TRUE}
+
+```
+
+```{r partial-solution}
+pcor.test(data$Deutsch, data$Mathe, data$Abi)
+# im Vergleich zu
+cor.test(data$Deutsch, data$Mathe)
+```
+
+```{r partial-mpc, echo=FALSE}
+question("Im Vergleich zur normalen Korrelation, wie groß ist die Partialkorrelation?",
+         answer("Ungefähr halb so groß.", correct = T),
+         answer("Ungefähr doppelt so groß."),
+         answer("Ungefähr gleich groß."),
+         answer("Ungefähr ein Drittel so groß."),
+         answer("Ungefähr ein Viertel so groß."),
+         random_answer_order = T)
+```
+
+Super! Nun kannst Du entweder chillen oder Du festigst Dein Wissen noch mit ein paar Übungsaufgaben.
+
+## Übungsaufgaben Tag 5
+
+### Aufgabe $\chi^2$-Test
+
+Die folgenden Daten sind aus einer Übungsaufgabe der Methodenlehre zu Simpsons Paradox.
+
+```{r prepare-simpsons-paradox}
+a <- c(820, 80, 680, 20)
+b <- c(20, 80, 100, 200)
+simpsonsparadox <- matrix(a+b, nrow=2, byrow=T)
+colnames(simpsonsparadox) <- c("Accept", "Reject")
+simpsonsparadox <- as.data.frame(simpsonsparadox, row.names = c("Male", "Female"))
+simpsonsparadox
+```
+
+Dargestellt sind hier die Häufigkeiten der Annahme und Ablehnung von Studienplatzbewerbungen aufgeteilt nach Geschlecht. Wir haben in der Übung den $p$-Wert aus dem Artikel von Kievit hierzu nachgerechnet. Das haben wir per Hand gemacht, also ohne Yates Korrektur und kamen auf einen Wert von 11.696. Welcher Wert kommt in `R` (mit Korrektur) heraus?
+
+```{r simpson, exercise=TRUE}
+
+```
+
+```{r simpson-solution}
+chisq.test(simpsonsparadox, correct = T)
+```
+
+```{r simpson-mpc, echo=FALSE}
+question("Welcher $\\chi^2$-Wert kommt heraus?",
+  answer("11.309", correct = TRUE),
+  answer("11.696"),
+  answer("19.294"),
+  answer("7.389"),
+  answer("14.223"),
+  random_answer_order = T
+)
+```
+Das ist auch der Wert, der im Paper angegeben ist.
+
+### Aufgabe Partialkorrelation
+
+Schreibe eine Funktion mit der Du aus Korrelationen Partialkorrelationen berechnen kannst. Benutze die Funktion anschließend für das Beispiel aus der Vorlesung:
+
+```{r}
+vl <- matrix(c(1, .43, -.51, -.54, .43, 1, .41, -.12, -.51, .41, 1, .23, -.54, -.12, .23, 1), ncol = 4)
+row.names(vl) <- c("Gewichtsverlust", "Sport", "Kalorienaufnahme", "Alter")
+colnames(vl) <- c("Gewichtsverlust", "Sport", "Kalorienaufnahme", "Alter")
+vl 
+```
+
+Der Zusammenhang zwischen Gewichtsverlust und Sport, ohne den Einfluss von Kalorienaufnahme soll berechnet werden.
+
+```{r parcor2, exercise=TRUE}
+
+```
+
+```{r parcor2-solution}
+parcor <- function(xy, xz, yz){
+  (xy-xz*yz)/(sqrt(1-xz^2)*sqrt(1-yz^2))
+}
+parcor(vl[1,2], vl[1,3], vl[2,3])
+```
+
+```{r parcor2-mpc, echo=FALSE}
+question("Wie groß ist die Korrelation?",
+         answer("0.8146", correct = T),
+         answer("0.7138"),
+         answer("0.4124"),
+         answer("-0.8142"),
+         answer("-0.6102"),
+         random_answer_order = T)
+```
+
+Wie groß ist die Power bei einer Regression mit zwei Prädiktoren, einer Stichprobengröße von 88, einem $\alpha$ von 5% und einem $R^2$ von 0.13? Benutze die Funktion `wp.regression` und finde heraus, wie Du $R^2$ in $f^2$ umrechnen kannst.
+
+```{r powervl2, exercise=TRUE}
+
+```
+
+### Aufgabe Power
+
+```{r powervl2-solution}
+f2 = 0.13/(1-0.13)
+wp.regression(n = 88, p1 = 2, f2 = f2, alpha = .05)
+```
+
+```{r powervl2-mpc, echo=FALSE}
+question("Wie groß ist die Power?",
+         answer("0.90", correct = T),
+         answer("0.95"),
+         answer("0.80"),
+         answer("0.85"),
+         answer("0.99"),
+         random_answer_order = T)
+```
+
+Gut gemacht. Du hast diesen Tag erfolgreich überstanden. Nur noch zwei Tage, dann bist Du ein pRofi!

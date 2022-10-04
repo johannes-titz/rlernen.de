@@ -1,0 +1,737 @@
+---
+title: "1. Intro"
+runtime: shiny_prerendered
+output:
+  learnr::tutorial:
+    allow_skip: yes
+    progressive: no
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(printr)
+knitr::opts_chunk$set(echo = FALSE, cache = FALSE)
+tutorial_options(exercise.startover = TRUE)
+```
+
+## Arithmetik mit der kleinen Nervensäge
+
+Dein R-Kurs beginnt gerade, aber Deine kleine Schwester nervt schon seit Stunden, dass Du ihre Mathe-Hausaufgaben überprüfen sollst bevor sie diese an den Lehrer schickt (auch sie macht E-Learning in Zeiten von COVID-19). "Wenn R so toll ist, dann kannst Du das doch bestimmt damit machen", sagt sie. Das stimmt, denn R ist eine Turing-Maschine.
+
+Du schaust Dir die Aufgaben an:
+
+$$5462+124\\
+8733-9000\\
+12 \cdot 24\\
+16^4\\
+\frac{801}{3}\\
+\sqrt[4]{256}
+$$
+
+"Alles nur Arithmetik", denkst Du Dir und gibst die erste Zeile in R ein (drücke auf die **Run Code**-Schaltfläche rechts um den Befehl auszuführen):
+
+```{r a1, exercise=TRUE}
+5462+124
+```
+
+Das klappt. Also löst Du auch die restlichen Aufgaben. ACHTUNG: copy-pasten klappt nicht, Du musst die Zahlen eintippen!
+
+**Aufgabe 2**
+
+$8733-9000$
+```{r a2, exercise=TRUE}
+
+```
+
+```{r a2-solution}
+8733-9000
+```
+
+```{r a2mpc, echo=FALSE}
+question(random_answer_order = T,
+         "Was kommt raus?",
+  answer("-266"),
+  answer("-267", correct = T),
+  answer("-268"),
+  answer("-269"),
+  answer("-270")
+)
+```
+
+**Aufgabe 3**
+
+$12 \cdot 24$
+
+```{r a3, exercise=TRUE}
+
+```
+
+```{r a3-solution}
+12*24
+```
+
+```{r a3mpc, echo=FALSE}
+question(random_answer_order = T,
+         "Was kommt raus?",
+  answer("240"),
+  answer("264"),
+  answer("288", correct = T),
+  answer("312"),
+  answer("336")
+)
+```
+
+**Aufgabe 4**
+
+$16^4$
+
+```{r a4, exercise=TRUE}
+
+```
+
+```{r a4-solution}
+16^4
+```
+
+```{r a4mpc, echo=FALSE}
+question(random_answer_order = T,
+         "Was kommt raus?",
+  answer("65536", correct = T),
+  answer("4913"),
+  answer("4096"),
+  answer("50625"),
+  answer("83521")
+)
+```
+
+```{r a4-hint}
+# Finde heraus welches Symbol fürs Potenzieren verwendet wird (z. B. bei einer Suchmaschine Deiner Wahl).
+```
+
+**Aufgabe 5**
+
+$\frac{801}{3}$
+```{r a5, exercise = TRUE}
+
+```
+
+```{r a5-solution}
+801/3
+```
+
+```{r a5mpc, echo=FALSE}
+question(random_answer_order = T,
+         "Was kommt raus?",
+  answer("267", correct = T),
+  answer("266"),
+  answer("265"),
+  answer("268"),
+  answer("269")
+)
+```
+
+**Aufgabe 6**
+
+Die letzte Aufgabe erfordert allerdings einen Umweg, da R keinen Befehl kennt um die vierte Wurzel aus einer Zahl zu ziehen.
+
+$\sqrt[4]{256}$
+```{r a6, exercise=TRUE}
+
+```
+
+```{r a6-solution}
+256^(1/4)
+```
+
+```{r a6-hint}
+# Wie lässt sich die vierte Wurzel aus 256 anders schreiben?
+```
+
+
+```{r a6mpc, echo=FALSE}
+question(random_answer_order = T,
+         "Was kommt raus?",
+  answer("4", correct = T),
+  answer("2"),
+  answer("8"),
+  answer("5"),
+  answer("6")
+)
+```
+
+Du zeigst Deiner Schwester die Ergebnisse und sie sagt nur cool und lakonisch zwei Worte: "R fetzt!". Du selbst lässt Dich nicht so leicht beeindrucken, denn das Rechnen mit Zahlen ist was für Kinder. Du suchst die ultimative Herausforderung und willst gerne mit Variablen rechnen!
+
+## Variablen, Skalare, Vektoren, Pizzen
+Die einfachste Form von Variablen sind Skalare, Variablen mit nur einem Wert:
+
+```{r pizza0, echo = T}
+pi <- 3.14
+z <- 14
+a <- 1
+pi*z*z*a
+```
+
+Wie man sieht, kann man Variablen über den Zuweisungsoperator ``<-`` Werte zuweisen. Der Zuweisungsoperator besteht aus dem "kleiner als"-Symbol ``<`` und einem Minus ``-``, zusammengesetzt sieht es dann aus wie ein nachs links zeigender Pfeil. Man beachte hier zudem, dass das Dezimaltrennzeichen bei R ein Punkt und kein Komma ist (3.14 und nicht 3,14). Das Komma wird stattdesen bei Aufzählungen benutzt (3,14 wäre also 3 und 14). Gleich merken, denn das ist ein häufiger Fehler bei Einsteigern. Das Rechnen mit Variablen ist dann genauso einfach wie das Rechnen mit Zahlen (siehe letzte Zeile im Code: ``pi*z*z*a``)
+
+**Kleine Zwischenfrage:**
+
+```{r pizza1, echo=FALSE}
+question(
+  "Welcher Berechnung enstpricht $\\pi z z a$ in der letzten Zeile des obigen R-Codes?",
+  answer("Dem Volumen eines Zylinders mit Radius $z$ und Höhe $a$", correct = T),
+  answer("Dem Volumen eines Zylinders mit Radius $a$ und Höhe $z$"),
+  answer("Der Fläche eines Zylinders mit Radius $z$ und Höhe $a$"),
+  answer("Der Fläche eines Zylinders mit Radius $a$ und Höhe $z$"),
+  random_answer_order = T
+)
+```
+
+**Aufgabe**
+
+Ändere den **Durchmesser** der Pizza auf 32 und die Höhe auf 1.5. Führe die Berechnung erneut durch:
+
+```{r pizza2, exercise = TRUE, exercise.lines = 6}
+
+```
+
+```{r pizza2-solution}
+pi <- 3.14
+z <- 16
+a <- 1.5
+pi*z*z*a
+```
+
+```{r pizza2mpc, echo=FALSE}
+question(
+  "Was kommt heraus?",
+  answer("1205.76", correct = T),
+  answer("795.99"),
+  answer("923.16"),
+  answer("1059.75"),
+  answer("1361.19"),
+  random_answer_order = T
+)
+```
+
+Möchte man mehrere Werte einer Variablen zuweisen, so benötigt man den *combine*-Operator ``c``:
+
+```{r, echo = T}
+z <- c(14, 15, 16)
+a <- c(2, 1.5, 1)
+```
+
+Im Grunde könnte man sagen, immer wenn ein ``c()`` zu sehen ist, kann man auch einfach "Vektor" denken (Kommas trennen die Elemente des Vektors). Da R vektor-orientiert ist, gehen nun auch solche Berechnungen:
+
+```{r, echo = T}
+pi*z*z*a
+```
+
+Multiplizieren wir also Vektoren mit Skalaren, weiß R, dass er die Skalare auf die Länge der Vektoren bringen muss. Das ist ziemlich clever und geht in vielen anderen Programmiersprachen nicht!
+
+**Aufgabe**
+
+Bei einer (realen) veganen Pizzeria in Chemnitz gibt es zwei Größen von Pizzen, 26 cm und 32 cm (Durchmesser). Heute ist Pizza-Tag und Du und Deine Freunde wollen jeweils eine Pizza bestellen. Da Du schon Erfahrung mit der Pizzeria hast, empfiehlst Du die folgenden drei Pizzen:
+
+
+|Pizza      |⌀ 26 |⌀ 32|
+|----------:|:--------:|:-------:|
+|Speciale   | 9.00 €        |12.50 €       |
+|Funghi     |8.00 €      |11.50 €    |
+|Margherita | 6.00 €        | 9.50 €        |
+
+Bei der Bestellung erfahrt Ihr, dass alle Pizzen eine Höhe von 1 cm haben. Einer Deiner Freunde ist knapp bei Kasse und sagt, dass er nicht mehr als 1.5 Cent pro Kubikzentimeter Pizza ausgeben möchte (er ist leicht nerdig, ja). Welche Pizzen kommen für ihn in Frage? Führe eine geeignete Berechnung in R durch. Erstelle dafür zunächst die Variablen *Durchmesser* (oder *Radius*) und *Preis*.
+
+```{r pizza4, exercise = TRUE}
+
+```
+
+```{r pizza4-solution}
+preis <- c(9, 8, 6, 12.5, 11.5, 9.5)
+durchmesser <- c(26, 26, 26, 32, 32, 32)
+preis_pro_kubikcm <- preis / (pi * (durchmesser/2)^2 * 1)
+preis_pro_kubikcm
+# Es lohnt sich also für jede Pizza die größere Größe zu wählen. Bei der Margherita ist der Unterschied jedoch deutlich geringer zwischen beiden Größen.
+```
+
+```{r pizza4-hint-1}
+preis <- c(9, 8, 6, 12.5, 11.5, 9.5)
+```
+
+```{r pizza4-hint-2}
+durchmesser <- c(26, 26, 26, 32, 32, 32)
+```
+
+```{r pizza4-hint-3}
+# Was Du willst ist der Preis für einen Kubikcentimer (Teile den Preis durch das Volumen).
+```
+
+```{r pizza4mpc, echo=FALSE}
+question(
+  "Welche Pizza kann Dein Freund bestellen?",
+  answer("Alle Pizzen bis auf Speciale in beiden Größen und Funghi mit Durchmesser 26cm", correct = T),
+  answer("alle Pizzen"),
+  answer("keine der Pizzen"),
+  answer("Nur Margherita in beiden Größen"),
+  answer("Alle Pizzen mit Durchmesser 26cm"),
+  answer("Alle Pizzen mit Durchmesser 28cm"),
+  random_answer_order = T
+)
+```
+
+Ihr gebt die Bestellung auf und genießt diesen Abend jeden einzelnen Kubikzentimeter Pizza. Das ganze findet natürlich nur über Videokonferenz statt, so wie der Rest des gegenwärtigen Lebens.
+
+## Dataframes
+Zwar war die Lösung des Pizza-Problems in R zielführend, aber die Ausgabe des Ergebnisses als Vektor ist etwas unübersichtlich. Praktischer wäre eine Art Tabelle. Und die gibt es in R unter der Bezeichnung **Dataframe**. Wenn Du also Dataframe hörst, denke einfach: Tabelle.
+
+```{r, echo = T}
+pi <- 3.14
+preis <- c(9, 8, 6, 12.5, 11.5, 9.5)
+durchmesser <- c(26, 26, 26, 32, 32, 32)
+preis_pro_kubikcm <- preis / (pi * (durchmesser / 2)^2 * 1)
+# nun erstellen wir den Dataframe:
+d <- data.frame(preis, durchmesser, preis_pro_kubikcm)
+#  und geben ihn aus
+d
+```
+
+Wir verwenden also das Kommando ``data.frame`` und schreiben dann dort Vektoren mit Komma getrennt hinein. Beachte, dass ich am Ende für die Ausgabe den Dataframe nochmals hinschreibe (die letzte Zeile), ansonsten würde ``R`` ihn nicht anzeigen, sondern nur erstellen.
+
+Die Ausgabe sieht schon ganz gut aus, aber wir hätten gerne noch die Namen der Pizzen:
+
+```{r, echo = T}
+name <- c("Speciale", "Funghi", "Margherita", "Speciale", "Funghi",
+          "Margherita")
+```
+
+Hier habe ich also einer Variablen mehrere Zeichenketten, auch Characters oder Strings (nicht was Du schon wieder denkst) genannt, zugewiesen. Diese müssen unbedingt in Anführungszeichen gesetzt werden. Warum? Weil R sonst denkt das wären auch Variablen, denn das folgende wäre ja prinzipiell auch möglich:
+
+```{r, echo = T}
+Speciale <- "ist gar nicht der Speciale-String"
+Funghi <- "und das auch nicht der Funghi-Character"
+name <- c(Speciale, Funghi, "Margherita", "Speciale", "Funghi",
+          "Margherita")
+name
+```
+
+Der einzige Unterschied zu vorher sind die Anführungszeichen bei Speciale und Funghi:
+
+```{r, echo = T}
+name <- c("Speciale", "Funghi", "Margherita", "Speciale", "Funghi",
+          "Margherita")
+name
+```
+
+Nun ist Deine Aufgabe einen Dataframe mit Namen, Preis, Durchmesser und Preis pro Kubikzentimeter zu erstellen und ihn anzuzeigen. Die ersten Befehle stehen schon da, Du musst also nur noch den Dataframe erzeugen und ihn ausgeben.
+
+```{r df, exercise = TRUE}
+pi <- 3.14
+preis <- c(9, 8, 6, 12.5, 11.5, 9.5)
+durchmesser <- c(26, 26, 26, 32, 32, 32)
+preis_pro_kubikcm <- preis / (pi*(durchmesser/2)^2 * 1)
+name <- c("Speciale", "Funghi", "Margherita", "Speciale", "Funghi",
+          "Margherita")
+# erstelle nun auf den nächsten Zeilen den Dataframe und gib ihn aus!
+```
+
+```{r df-solution}
+pi <- 3.14
+preis <- c(9, 8, 6, 12.5, 11.5, 9.5)
+durchmesser <- c(26, 26, 26, 32, 32, 32)
+preis_pro_kubikcm <- preis / (pi*(durchmesser/2)^2 * 1)
+name <- c("Speciale", "Funghi", "Margherita", "Speciale", "Funghi",
+          "Margherita")
+# nun erstellen wir den Dataframe:
+d <- data.frame(name, preis, durchmesser, preis_pro_kubikcm)
+d
+```
+
+```{r dfmpc, echo=FALSE}
+question(
+  "Welche Dimensionen hat der Dataframe? Zeilen x Spalten (ohne Kopfzeile)",
+  answer("6 x 4", correct = TRUE),
+  answer("7 x 4"),
+  answer("6 x 5"),
+  answer("5 x 4"),
+  answer("6 x 6"),
+  answer("5 x 5"),
+  random_answer_order = T
+)
+```
+
+```{r}
+# für die weitere ausgabe nötig
+d <- data.frame(name, preis, durchmesser, preis_pro_kubikcm)
+```
+
+Bemerkenswert am Dataframe ist, dass er verschiedene Datentypen enthalten kann. Dies ist ganz anders zu einer Matrix, die aus einem einzigen Datentyp besteht (z. B. nur Zahlen oder nur Zeichenketten).
+
+Es gibt noch andere Datentypen, die wir im Laufe des Kurses benutzen werden. Bei Datentypen kann man auch einfach an Skalenniveaus denken. Der Preis, Durchmesser und der Preis pro Kubikzentimeter sind alle verhältnisskaliert, der Name der Pizza ist hingegen nominalskaliert. Der Datentyp steht bei der Ausgabe des Dataframes unter dem Variablennamen. Nominalskalierte Variablen in R sind entweder ``characters`` oder ``factors``. Unter der Variable **name** steht die Abkürzung **\<chr\>**, also eine Character-Variable. Die anderen Variablen haben den Datentyp ``double``, was eine Fließkommazahl ist -- merkt Euch einfach, dass dies eine reele Zahl ist, mit der man verhältnisskalierte Variablen darstellen kann. 
+
+Die Datentypen zu kennen ist sehr wichtig, denn genau so wie bei Skalenniveaus, kann man mit bestimmten Datentypen nur ganz bestimmte Operationen durchführen. Einen Mittelwert über die Namen der Pizzen kann beipielsweise nicht berechnen, sehr wohl aber über die anderen Variablen. Deshalb werden wir hin und wieder über solch trockene Themen sprechen müssen. Verhältnisskaliert und nominalskaliert haben wir schon, intervallskaliert ist ja ähnlich zu Verhältnis, dann fehlt nur noch ordinalskaliert:
+
+```{r, echo = T}
+geschmack <- factor(x = c("lecker", "sehr lecker", "lecker", "köstlich"), 
+                    levels = c("lecker", "sehr lecker", "köstlich"),
+                    ordered = TRUE)
+geschmack
+```
+
+Hier passiert sehr viel Neues, also aufpassen!
+
+- Wir verwenden das Kommando ``factor``, um eine ordinalskalierte Variable zu erstellen.
+
+- Wir haben einen Vektor mit 4 Werten, den wir an ``x`` übergeben. 
+
+- Dies machen wir mit einem Gleichheitszeichen ``=``. 
+
+- Beachte, dass *lecker* zweimal vorkommt.
+
+- Die Variable **geschmack** kann hier nur 3 unterschiedliche Werte annehmen. Diese sind Ihrer Reihenfolge nach im ``levels``-Argument beschrieben. 
+
+- Beachte den Parameter ``ordered = TRUE``. Lassen wir ihn weg oder schreiben ``ordered = FALSE``, so bekommen wir nur eine nominalskalierte Variable. 
+
+Wenn Du noch nicht alles verstehst, kein Problem, gleich siehst Du es nochmal und kannst es selbst üben.
+
+Wir würden gerne zum Pizza-Dataframe noch die Variable **geschmack** hinzufügen. Speciale ist sehr lecker, Funghi ist köstlich und Margherita ist lecker.
+
+Um dies zu bewerkstelligen, müssen wir den Dataframe nicht neu erstellen, sondern können ihm einfach eine neue Spalte hinzufügen:
+
+```{r, echo = T}
+cbind(d, geschmack = factor(x = c("sehr lecker", "köstlich", "lecker", "sehr lecker",
+                                  "köstlich", "lecker"),
+                            levels = c("lecker", "sehr lecker", "köstlich"),
+                            ordered = TRUE))
+```
+
+Achte darauf, dass man an ``factor`` zwei Vektoren übergeben muss: An ``x`` den Vektor, wie er zu den Pizzen passt. Und an ``levels`` die richtige Reihenfolge für die Rangordnung. Sonst geht es schief!
+
+``cbind`` steht hier für columnbind, also "füge eine neue Spalte an einen vorhandenen Dataframe". Weiterhin zu beachten ist, dass ich der Spalte einen Namen gebe (**geschmack**). Hier haben wir allerdings vergessen, diesen neuen Dataframe einer Variablen zuzuweisen. Das heißt, wir haben immer noch den alten Dataframe auf ``d`` gespeichert und die Variable **geschmack** ist nirgends aufzufinden:
+
+```{r, echo = T}
+d
+```
+
+Die Lösung: einfach nochmal auf die Variable **d** zuweisen:
+
+```{r, echo = T}
+d <- cbind(d, geschmack = factor(x = c("sehr lecker", "köstlich", "lecker", 
+                                       "sehr lecker", "köstlich", "lecker"),
+                                 levels = c("lecker", "sehr lecker", "köstlich"),
+                                 ordered = TRUE))
+d
+```
+
+In Deinem Freundeskreis gibt es ein paar Champignon-Allergiker. Praktischerweise listet die Pizzeria auf, ob Champignons eine Zutat in der jeweiligen Pizza ist. Auf der Funghi sind natürlich viele Champignons, auf der Speciale sind auch ein paar drauf, aber auf der Margherita keine. Erstelle zunächst den Vektor **champignon** als ordinale Variable mit 6 Elementen:
+
+- etwas, viel, keine, etwas, viel, keine 
+
+Dies entspricht der Reihenfolge der Pizzen: Speciale, Funghi, Margherita, Speciale, Funghi, Margherita. Gib den Vektor **champignon** aus.
+
+```{r champignon0, exercise = TRUE}
+
+```
+
+```{r champignon0-hint}
+# Schau Dir nochmal das Beispiel von oben zur Erstellung einer ordinalen 
+# Variable an (geschmack)
+```
+
+```{r champignon0-solution}
+champignon <- factor(x = c("etwas", "viel", "kein", "etwas", "viel", "kein"),
+                     levels = c("kein", "etwas", "viel"),
+                     ordered = TRUE)
+champignon
+```
+
+```{r champignon0mpc, echo=FALSE}
+question(
+  "Welche Levels gibt die R-Konsole für Deine erstellte Variable **champignon** aus?",
+  answer("kein < etwas < viel", correct = T),
+  answer("etwas < viel < kein"),
+  answer("viel > etwas > kein"),
+  answer("viel > kein > etwas"),
+  answer("kein > etwas > viel"),
+  answer("etwas > viel > kein"),
+  random_answer_order = T
+)
+```
+
+Füge dem Dataframe die Variable **champignon** hinzu und gib den neuen Dataframe aus. Du kannst Deinen Vektor **champignon** von oben einfach kopieren um Dir Tipp-Arbeit zu sparen.
+
+```{r champignon, exercise = TRUE}
+pi <- 3.14
+preis <- c(9, 8, 6, 12.5, 11.5, 9.5)
+durchmesser <- c(26, 26, 26, 32, 32, 32)
+preis_pro_kubikcm <- preis / (pi*(durchmesser/2)^2 * 1)
+name <- c("Speciale", "Funghi", "Margherita", "Speciale", "Funghi",
+          "Margherita")
+d <- data.frame(name, preis, durchmesser, preis_pro_kubikcm)
+d <- cbind(d, geschmack =  factor(c("köstlich", "sehr lecker", "lecker", "köstlich", "sehr lecker", "lecker"), ordered = TRUE))
+# füge nun dem Dataframe noch die Variable champignon hinzu und gib den Dataframe aus
+```
+
+```{r champignon-solution}
+pi <- 3.14
+preis <- c(9, 8, 6, 12.5, 11.5, 9.5)
+durchmesser <- c(26, 26, 26, 32, 32, 32)
+preis_pro_kubikcm <- preis / (pi*(durchmesser/2)^2 * 1)
+name <- c("Speciale", "Funghi", "Margherita", "Speciale", "Funghi",
+          "Margherita")
+d <- data.frame(name, preis, durchmesser, preis_pro_kubikcm)
+d <- cbind(d, geschmack =  factor(c("köstlich", "sehr lecker", "lecker", "köstlich", "sehr lecker", "lecker"), ordered = TRUE))
+# füge nun dem Dataframe noch die Variable champignon hinzu
+champignon <- factor(x = c("etwas", "viel", "kein", "etwas", "viel", "kein"),
+               levels = c("kein", "etwas", "viel"),
+               ordered = TRUE)
+d <- cbind(d, champignon)
+d
+```
+
+```{r champignonmpc, echo=FALSE}
+question(
+  "Was steht unter der Variable *champignon* im Dataframe?",
+  answer("\\<ord\\>", correct = T),
+  answer("\\<dbl\\>"),
+  answer("\\<int\\>"),
+  answer("\\<chr\\>"),
+  answer("\\<fctr\\>"),
+  answer("\\<fct\\>"),
+  random_answer_order = T
+)
+```
+
+Jetzt kennst Du schon einige Datentypen in ``R``. Du weißt, was ein Dataframe ist, kannst Variablen Werte zuweisen und diese in ``R`` ausgeben. Du kennst die Befehle ``c, data.frame, cbind, factor``. Im Grunde werden wir in den nächsten Schritten einfach nur viele weitere Befehle solcher Art lernen. Genauer gesagt sind es nicht einfach Befehle, sondern es sind **Funktionen**.
+
+## Funktionen-Analogie und Hilfe
+
+Funktionen kennst Du schon aus der Mathematik. Das ist kein großer Unterschied zu R (oder anderen Programmiersprachen): Funktionen nehmen einen oder mehrere Parameter auf und geben einen Wert zurück, z. B.: $f(x_1, x_2) = y(x_1, x_2) = 0.5x_1+3x_2^2$. Nimmt $x_1, x_2$ auf und gibt $y$ zurück. So ist es auch in R: ``c(x_1, x_2, ..., x_n)`` nimmt $n$ Werte auf und gibt einen Vektor bestehend aus diesen Werten zurück. ``factor(x, levels, ordered)`` nimmt drei Werte auf, einen Vektor ``x``, einen Vektor ``levels`` und einen logischen Wert ``ordered``, der entweder wahr (``TRUE``) oder falsch (``FALSE``) ist. Zurück gibt die Funktion eine nominale oder ordinale Version von ``x``. In R weisen wir üblicherweise die Rückgabewerte dieser Funktionen einer Variablen zu und rechnen dann damit weiter.
+
+Was ich über die Anzahl der Parameter geschrieben habe, stimmt nicht ganz, denn die Funktionen ``c()`` und ``factor()`` nehmen eigentlich noch mehr Parameter auf; man kann mit ihnen also noch viel mehr machen. Da Du schon bald viele neue Funktionen benutzen wirst, ist es gut zu wissen, welche Parameter diese Funktionen haben und was sie zurückgeben. Genauso wie bei einer mathematischen Funktion, bei der Du ja auch wissen willst, was $x$ und $y$ überhaupt sind. Hierfür ist es essentiell, dass Du verstehst wie man die Hilfe in R benutzt. Sagen wir mal, ich behaupte, dass es in R eine Funktion ``mean`` gibt. Dann kannst Du herausfinden wie man diese Funktion benutzt, indem Du Dir die Hilfe dazu anschaust (führe den Befehl einfach aus):
+
+```{r hilfe0, exercise = T}
+?mean
+```
+
+<hr>
+Die Sektion **Arguments** ist hierbei am interessantesten. Sie sagt uns, dass der erste Parameter ``x`` ein Vektor sein kann (aber auch andere Datentypen sind möglich). Die restlichen Parameter interessieren uns erst mal nicht. In der Sektion **Value**  sehen wir, was die Funktion zurückgibt: Den Mittelwert aller Werte von ``x`` ("the arithmetic mean of the values in x is computed"). Probieren wir es:
+
+```{r, echo = TRUE}
+mean(preis)
+```
+
+Der Durchschnittspreis der Pizzen beträgt `r mean(preis)` €. Die Funktion ``mean`` ist natürlich einfach zu benutzen, aber es gibt auch kompliziertere Funktionen. Immer wenn Du nicht weiter weißt, gib in die R-Konsole ein Fragezeichen ein, gefolgt von der Funktion, über die Du mehr erfahren möchtest.
+
+Rufe die Hilfe zur Funktion ``mad`` auf und lies sie durch:
+
+```{r hilfe1, exercise = TRUE}
+
+```
+
+```{r hilfe1-solution}
+?mad
+```
+
+
+```{r hilfempc1, echo=FALSE}
+question(
+  "Was macht die Funktion *mad* in R?",
+  answer("Sie berechnet den mittleren absoluten Abstand.", correct = T),
+  answer("Sie berechnet den Skalenwert des Mother-Adult Daughter Questionnaires (MAD)."),
+  answer("Sie berechnet den Median."),
+  answer("Sie berechnet einen gewichteten Mittelwert."),
+  answer("Sie berechnet die Minimum Approach Distance."),
+  answer("Sie berechnet die Standardabweichung."),
+  random_answer_order = T
+)
+```
+
+```{r hilfempc2, echo=FALSE}
+question(
+  "Wie viele Parameter hat die Funktion *mad*?",
+  answer("6", correct = T),
+  answer("2"),
+  answer("3"),
+  answer("4"),
+  answer("5"),
+  answer("7"),
+  random_answer_order = T
+)
+```
+
+```{r hilfempc3, echo=FALSE}
+question(
+  "Welche Funktionen sollte man sich laut Hilfe noch anschauen, die ähnlich zu der Funktion *mad* sind?",
+  answer("IQR, median, var", correct = T),
+  answer("mean, var, sd"),
+  answer("IQR, sd, var"),
+  answer("summary, mean, var"),
+  answer("sd, var, mad"),
+  answer("factor, summary, aov"),
+  random_answer_order = T
+)
+```
+
+Oft weiß man gar nicht, wie eine Funktion heißt. In diesem Fall bringt die Hilfe wenig. Man kann in R zwar eine Volltextsuche machen, aber diese liefert üblicherweise eine ganze Fülle an unübersichtlichen Ergebnissen. 
+
+<!-- Aber man kann auch eine Volltext-Suche machen. Sagen wir mal wir wollen die Standardabweichung berechnen, dann suchen wir nach standard deviation: -->
+
+<!-- ```{r sd, echo = TRUE} -->
+<!-- ??"standard deviation" -->
+<!-- ``` -->
+
+<!-- In diesem Fall gibt es sehr viele Funktionen, aber wir finden recht weit unten die Funktion ``sd`` aus dem Paket ``stats`` (was genau ein Paket ist, lernen wir später). -->
+
+<!-- ```{r, echo = T} -->
+<!-- sd(preis) -->
+<!-- ``` -->
+
+Im Normalfall wird es hilfreicher sein, bei einer Suchmaschine Deiner Wahl das Stichwort kombiniert mit "r stats" zu suchen. Die Seiten https://www.statmethods.net/ (quick-r) und https://stackexchange.com/ sind auch sehr hilfreich. Es gibt allgemein sehr viele Online-Materialien zu R. Wenn Du also denkst, dass es eine bestimmte Funktionalität in R geben müsste, findest Du diese am schnellsten durch einen Websuche.
+
+
+```{r hilfempc4, echo=FALSE}
+question(
+  "Du willst gerne den Modus in einem großen Datensatz in R berechnen. Wie heißt die Modus-Funktion in R? Betreibe eine kurze Webrecherche.",
+  answer("Ohne Zusatzpakete, gibt es in R keine eingebaute Funktion für die Berechnung des Modus.", correct = T),
+  answer("mode"),
+  answer("Mode"),
+  answer("mod"),
+  answer("modus"),
+  answer("mean(x, mode = TRUE)"),
+  random_answer_order = T
+)
+```
+
+Wir werden später nochmal über Funktionen sprechen, denn man kann auch eigene Funktionen schreiben, um Dinge zu tun, die R von alleine nicht kann. Dazu ist zu sagen, dass interessanterweise in R alles eine Funktion ist. Auch die Arithmetik-Symbole ``+ - * / ^`` sind Funktionen und auch der Zuweisungsoperator ``<-``. Die Syntax dieser Funktionen ist etwas anders, aber im Grunde könnte man z. B. auch das Addieren als Funktion bezeichnen. Sie nimmt zwei Parameter auf (die Summanden) und gibt einen Wert zurück (die Summe).
+
+```{r, echo = T}
+`+`(4, 4)
+```
+
+Verrückt! Das schreibt aber natürlich keiner so. Es soll nur nochmal die Funktionen-Analogie deutlich machen. Da das ``+`` ein besonderes Symbol in R ist, müssen wir es in diese komischen Anführungszeichen setzen. Am besten vergisst Du das gleich wieder, merke Dir nur, dass in R alles eine Funktion ist. Funktionen nehmen Parameter auf und geben einen Wert zurück und Funktionen haben natürlich einen Namen. 
+
+R zu beherrschen ist nichts anderes als sich Wissen über Funktionen anzueignen. Somit ist das Rlernen einer Programmiersprache nicht viel anders als das Rlernen einer normalen Sprache: Man muss die Vokabeln kennen und auch die Grammatik. Heute hast Du gelernt jemanden zu begrüßen, Deinen Namen und Dein Alter zu sagen. Am zweiten Tag erweitern wir unseren Vokabelschatz und lernen die Grammatik des Selektierens. Für den heutigen Tag bleibt eine Abschlussaufgabe übrig, die einige der Themen nochmal wiederholt:
+
+## Abschlussaufgabe Tag 1
+Aus Methodenlehre I erinnerst Du Dich vielleicht noch an die Aufgabe mit den Gehältern von Psychotherapeuten bei den Lagemaßen:
+
+In einem Bezirk gibt es zehn niedergelassene Psychotherapeuten. Fünf dieser Psychotherapeuten haben ein Monatseinkommen von je 2.500 € (Netto), die fünf übrigen Psychotherapeuten haben ein Monatseinkommen von 2.600 €, 2.700 €, 2.800 €, 2.900 € bzw. 3.000 €. Nun lässt sich in diesem Bezirk ein weiterer Psychotherapeut nieder, dessen Monatseinkommen 100.000 € beträgt (er behandelt nur prominente Schauspieler, Fußballstars und Politiker, die sich das leisten können). Welche Auswirkungen ergeben sich dadurch auf den Modus, den Median und das arithmetische Mittel der Monatseinkommen aller Psychotherapeuten des Bezirks?
+
+Erstelle zwei Vektoren **gehalt** und **gehalt_mit_star**. Um die Erstellung zu vereinfachen, nutze die Funktion ``rep``. Berechne die entsprechenden Lagemaße. Nutze hierfür notfalls die Hilfe und das www, um die richtigen Funktionen zu finden. Hinweis: Es gibt keine Modus-Funktion in R, benutze stattdessen die Funktion ``table``.
+
+```{r pt, exercise=TRUE}
+
+```
+
+```{r pt-hint-1}
+gehalt <- c(rep(2500, 5), 2600, 2700, 2800, 2900, 3000)
+gehalt_mit_star <- c(rep(2500, 5), 2600, 2700, 2800, 2900, 3000, 1e5)
+```
+
+```{r pt-hint-2}
+gehalt <- c(rep(2500, 5), 2600, 2700, 2800, 2900, 3000)
+gehalt_mit_star <- c(rep(2500, 5), 2600, 2700, 2800, 2900, 3000, 1e5)
+# jetzt finde die entsprechenden Funktionen für Mittelwert und Median,
+# für den Modus kannst Du die Funktion table benutzen
+```
+
+```{r pt-solution}
+gehalt <- c(rep(2500, 5), 2600, 2700, 2800, 2900, 3000)
+gehalt_mit_star <- c(rep(2500, 5), 2600, 2700, 2800, 2900, 3000, 1e5)
+mean(gehalt)
+mean(gehalt_mit_star)
+median(gehalt)
+median(gehalt_mit_star)
+table(gehalt)
+table(gehalt_mit_star)
+```
+
+```{r ptmpc1, echo = FALSE}
+question(
+  "Wie groß sind die Unterschied zwischen den Mittelwerten, Medianen und Modi für die zwei Fälle (ohne Richie Ritch Psychotherapeut und mit)?",
+  answer("8850, 50, 0", correct = T),
+  answer("18950, 50, 50"),
+  answer("2950, 50, 0"),
+  answer("8850, 55, 0"),
+  answer("8950, 55, 0"),
+  answer("8950, 0, 0"),
+  random_answer_order = T
+)
+```
+
+Berechne das *Jahresgehalt* für jeden Psychotherapeuten (auch dem Star) und vergleiche die Standardabweichung (Funktion ``sd``) des Monats- und Jahresgehaltes.
+
+```{r pt2, exercise = TRUE}
+
+```
+
+```{r pt2-hint-1}
+# Für Teilaufgabe 1 musst Du die Gehälter nur mit 12 multiplizieren
+# Für Teilaufgabe 2 musst Du die Funktion sd anwenden
+```
+
+```{r pt2-solution}
+gehalt_mit_star <- c(rep(2500, 5), 2600, 2700, 2800, 2900, 3000, 1e5)
+jahreseinkommen <- gehalt_mit_star * 12
+sd(gehalt_mit_star)
+sd(jahreseinkommen)
+```
+
+```{r pt2mpc, echo = FALSE}
+question(
+  "Wie groß sind die Standardabweichungen für das Monats- und Jahresgehalt?",
+  answer("29352.68, 352232.2", correct = T),
+  answer("29352.68, 29352.68"),
+  answer("352232.2, 352232.2"),
+  answer("36111.11, 36111.11"),
+  answer("36111.11, 352232.2"),
+  answer("293526.8, 36111.11"),
+  random_answer_order = T
+)
+```
+
+Erstelle einen Dataframe aus dem Monats- und Jahresgehalt aller Psychotherapeuten, sowie dem Geschlecht (die Reihenfolge entspricht der Gehaltsreihenfolge von oben): 
+
+- weiblich, weiblich, weiblich, weiblich, männlich, weiblich, weiblich, männlich, männlich, männlich, männlich
+
+Füge anschließend die ordinalskalierte Variable **berufserfahrung** hinzu (die Reihenfolge entspricht der Gehaltsreihenfolge von oben): 
+
+- Berufseinsteiger, Berufseinsteiger, Berufseinsteiger, mittlere Berufserfahrung, Berufseinsteiger, mittlere Berufserfahrung, mittlere Berufserfahrung, Berufseinsteiger, mittlere Berufserfahrung, mittlere Berufserfahrung, hohe Berufserfahrung.
+
+```{r pt4, exercise = TRUE}
+
+```
+
+```{r pt4-solution}
+gehalt_mit_star <- c(rep(2500, 5), 2600, 2700, 2800, 2900, 3000, 1e5)
+jahreseinkommen <- gehalt_mit_star * 12
+data <- data.frame(gehalt_mit_star, jahreseinkommen,
+                   geschlecht = c(rep("w", 4), "m", "w", "w", "m", "m", "m",
+                                  "m"))
+data <- cbind(data,
+              berufserfahrung = factor(x = c("einsteiger", "einsteiger",
+                                             "einsteiger", "mittel",
+                                             "einsteiger", "mittel", "mittel",
+                                             "einsteiger", "mittel", "mittel",
+                                             "hoch"),
+                                       levels = c("einsteiger", "mittel",
+                                                  "hoch"),
+                                       ordered = TRUE))
+data
+```
+
+```{r pt4mpc, echo = FALSE}
+question(
+  "Welche Datentypen hat der Dataframe?",
+  answer("dbl, dbl chr, ord", correct = T),
+  answer("dbl, dbl, chr, fctr"),
+  answer("dbl, dbl, ord, ord"),
+  answer("dbl, dbl, chr, int"),
+  answer("dbl, dbl, dbl, dbl"),
+  answer("fctr, ord, dbl, dbl"),
+  random_answer_order = T
+)
+```
+
+Glückwunsch zum Überleben des ersten Tages! Hast Du Fragen oder Anregungen, dann schreibe eine Mail an johannes at rlernen.de
+
+Ich freue mich über jede Anmerkung um den Kurs zu verbessern, egal wie klein oder groß sie ist. Nutze die Chance mitzugestalten!
