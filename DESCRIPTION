@@ -20,7 +20,6 @@ Imports:
     knitr,
     learnr,
     magick,
-    memer (>= 0.1.0.9000),
     png,
     ppcor,
     printr,
