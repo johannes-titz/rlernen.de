@@ -28,3 +28,9 @@ install_deps <- function() {
 clean_deps <- function(deps) {
   gsub("memer", "sctyner/memer", deps)
 }
+
+list_deps_csv <- function() {
+  deps <- find_deps()
+  deps <- clean_deps(deps)
+  paste0(deps, collapse = ",")
+}
