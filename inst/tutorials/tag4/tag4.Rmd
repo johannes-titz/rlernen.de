@@ -1,5 +1,5 @@
 ---
-title: "Rlernen - Tag 4"
+title: "4. t-Test, ANOVA, KA"
 runtime: shiny_prerendered
 output:
   learnr::tutorial:

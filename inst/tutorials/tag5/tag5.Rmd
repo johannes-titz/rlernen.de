@@ -1,5 +1,5 @@
 ---
-title: "Rlernen - Tag 5"
+title: "5. Nonparametrische"
 runtime: shiny_prerendered
 output:
   learnr::tutorial:

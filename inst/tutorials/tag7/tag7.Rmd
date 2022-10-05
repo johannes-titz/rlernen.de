@@ -1,5 +1,5 @@
 ---
-title: "Rlernen - Tag 7"
+title: "7. FA, CA"
 runtime: shiny_prerendered
 output:
   learnr::tutorial:
