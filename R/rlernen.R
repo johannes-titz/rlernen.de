@@ -32,5 +32,5 @@ clean_deps <- function(deps) {
 list_deps_csv <- function() {
   deps <- find_deps()
   deps <- clean_deps(deps)
-  paste0(deps, collapse = ",")
+  paste0("c('", paste0(deps, collapse = "','"), ")'")
 }
