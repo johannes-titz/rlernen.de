@@ -10,7 +10,7 @@ output:
 ```{r setup, include=FALSE}
 library(learnr)
 library(printr)
-knitr::opts_chunk$set(echo = FALSE, cache = FALSE)
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE)
 tutorial_options(exercise.startover = TRUE)
 ```
 
