@@ -18,7 +18,7 @@ Imports:
     dplyr,
     ez,
     knitr,
-    learnr
+    learnr,
     magick,
     memer (>= 0.1.0.9000),
     png,
