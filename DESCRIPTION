@@ -18,7 +18,7 @@ Imports:
     dplyr,
     ez,
     knitr,
-    learnr,
+    learnr (>= 0.10.7.9000),
     magick,
     memer,
     png,
@@ -33,3 +33,5 @@ Imports:
     sjPlot,
     tidyr,
     WebPower
+Remotes:  
+    rstudio/learnr
