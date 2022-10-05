@@ -709,7 +709,7 @@ Füge anschließend die ordinalskalierte Variable **berufserfahrung** hinzu (die
 
 ```
 
-```{r pt4-solution, render=pander::pander}
+```{r pt4-solution}
 gehalt_mit_star <- c(rep(2500, 5), 2600, 2700, 2800, 2900, 3000, 1e5)
 jahreseinkommen <- gehalt_mit_star * 12
 data <- data.frame(gehalt_mit_star, jahreseinkommen,
