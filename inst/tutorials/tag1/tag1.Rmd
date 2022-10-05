@@ -365,7 +365,13 @@ d <- data.frame(name, preis, durchmesser, preis_pro_kubikcm)
 
 Bemerkenswert am Dataframe ist, dass er verschiedene Datentypen enthalten kann. Dies ist ganz anders zu einer Matrix, die aus einem einzigen Datentyp besteht (z. B. nur Zahlen oder nur Zeichenketten).
 
-Es gibt noch andere Datentypen, die wir im Laufe des Kurses benutzen werden. Bei Datentypen kann man auch einfach an Skalenniveaus denken. Der Preis, Durchmesser und der Preis pro Kubikzentimeter sind alle verhältnisskaliert, der Name der Pizza ist hingegen nominalskaliert. Der Datentyp steht bei der Ausgabe des Dataframes unter dem Variablennamen. Nominalskalierte Variablen in R sind entweder ``characters`` oder ``factors``. Unter der Variable **name** steht die Abkürzung **\<chr\>**, also eine Character-Variable. Die anderen Variablen haben den Datentyp ``double``, was eine Fließkommazahl ist -- merkt Euch einfach, dass dies eine reele Zahl ist, mit der man verhältnisskalierte Variablen darstellen kann. 
+Es gibt noch andere Datentypen, die wir im Laufe des Kurses benutzen werden. Bei Datentypen kann man auch einfach an Skalenniveaus denken. Der Preis, Durchmesser und der Preis pro Kubikzentimeter sind alle verhältnisskaliert, der Name der Pizza ist hingegen nominalskaliert. Den Datentyp bekommt man durch den Befehl `str` (structure, also Struktur) heraus:
+
+```{r}
+str(d)
+```
+
+Nominalskalierte Variablen in R sind entweder ``characters`` oder ``factors``. Bei der Variable **name** steht die Abkürzung **\<chr\>**, also eine Character-Variable. Die anderen Variablen haben den Datentyp **num**, also eine numerische Variable.
 
 Die Datentypen zu kennen ist sehr wichtig, denn genau so wie bei Skalenniveaus, kann man mit bestimmten Datentypen nur ganz bestimmte Operationen durchführen. Einen Mittelwert über die Namen der Pizzen kann beipielsweise nicht berechnen, sehr wohl aber über die anderen Variablen. Deshalb werden wir hin und wieder über solch trockene Themen sprechen müssen. Verhältnisskaliert und nominalskaliert haben wir schon, intervallskaliert ist ja ähnlich zu Verhältnis, dann fehlt nur noch ordinalskaliert:
 
@@ -467,7 +473,7 @@ name <- c("Speciale", "Funghi", "Margherita", "Speciale", "Funghi",
           "Margherita")
 d <- data.frame(name, preis, durchmesser, preis_pro_kubikcm)
 d <- cbind(d, geschmack =  factor(c("köstlich", "sehr lecker", "lecker", "köstlich", "sehr lecker", "lecker"), ordered = TRUE))
-# füge nun dem Dataframe noch die Variable champignon hinzu und gib den Dataframe aus
+# füge nun dem Dataframe noch die Variable champignon hinzu, gib den Dataframe aus und lass Dir die Struktur anzeigen
 ```
 
 ```{r champignon-solution}
@@ -485,13 +491,15 @@ champignon <- factor(x = c("etwas", "viel", "kein", "etwas", "viel", "kein"),
                ordered = TRUE)
 d <- cbind(d, champignon)
 d
+# und Struktur anzeigen
+str(d)
 ```
 
 ```{r champignonmpc, echo=FALSE}
 question(
   "Was steht unter der Variable *champignon* im Dataframe?",
-  answer("\\<ord\\>", correct = T),
-  answer("\\<dbl\\>"),
+  answer("\\<Ord.factor\\>", correct = T),
+  answer("\\<num\\>"),
   answer("\\<int\\>"),
   answer("\\<chr\\>"),
   answer("\\<fctr\\>"),
@@ -500,7 +508,7 @@ question(
 )
 ```
 
-Jetzt kennst Du schon einige Datentypen in ``R``. Du weißt, was ein Dataframe ist, kannst Variablen Werte zuweisen und diese in ``R`` ausgeben. Du kennst die Befehle ``c, data.frame, cbind, factor``. Im Grunde werden wir in den nächsten Schritten einfach nur viele weitere Befehle solcher Art lernen. Genauer gesagt sind es nicht einfach Befehle, sondern es sind **Funktionen**.
+Jetzt kennst Du schon einige Datentypen in ``R``. Du weißt, was ein Dataframe ist, kannst Variablen Werte zuweisen und diese in ``R`` ausgeben. Du kennst die Befehle ``c, data.frame, cbind, factor, str``. Im Grunde werden wir in den nächsten Schritten einfach nur viele weitere Befehle solcher Art lernen. Genauer gesagt sind es nicht einfach Befehle, sondern es sind **Funktionen**.
 
 ## Funktionen-Analogie und Hilfe
 
@@ -508,8 +516,8 @@ Funktionen kennst Du schon aus der Mathematik. Das ist kein großer Unterschied 
 
 Was ich über die Anzahl der Parameter geschrieben habe, stimmt nicht ganz, denn die Funktionen ``c()`` und ``factor()`` nehmen eigentlich noch mehr Parameter auf; man kann mit ihnen also noch viel mehr machen. Da Du schon bald viele neue Funktionen benutzen wirst, ist es gut zu wissen, welche Parameter diese Funktionen haben und was sie zurückgeben. Genauso wie bei einer mathematischen Funktion, bei der Du ja auch wissen willst, was $x$ und $y$ überhaupt sind. Hierfür ist es essentiell, dass Du verstehst wie man die Hilfe in R benutzt. Sagen wir mal, ich behaupte, dass es in R eine Funktion ``mean`` gibt. Dann kannst Du herausfinden wie man diese Funktion benutzt, indem Du Dir die Hilfe dazu anschaust (führe den Befehl einfach aus):
 
-```{r hilfe0, exercise = T}
-?mean
+```{r hilfeintro, exercise=T}
+help(mean)
 ```
 
 <hr>
@@ -701,7 +709,7 @@ Füge anschließend die ordinalskalierte Variable **berufserfahrung** hinzu (die
 
 ```
 
-```{r pt4-solution}
+```{r pt4-solution, render=pander::pander}
 gehalt_mit_star <- c(rep(2500, 5), 2600, 2700, 2800, 2900, 3000, 1e5)
 jahreseinkommen <- gehalt_mit_star * 12
 data <- data.frame(gehalt_mit_star, jahreseinkommen,
@@ -717,17 +725,18 @@ data <- cbind(data,
                                                   "hoch"),
                                        ordered = TRUE))
 data
+str(data)
 ```
 
 ```{r pt4mpc, echo = FALSE}
 question(
   "Welche Datentypen hat der Dataframe?",
-  answer("dbl, dbl chr, ord", correct = T),
-  answer("dbl, dbl, chr, fctr"),
-  answer("dbl, dbl, ord, ord"),
-  answer("dbl, dbl, chr, int"),
-  answer("dbl, dbl, dbl, dbl"),
-  answer("fctr, ord, dbl, dbl"),
+  answer("num, num chr, Ord.factor", correct = T),
+  answer("num, num, chr, fctr"),
+  answer("num, num, Ord.factor, Ord.factor"),
+  answer("num, num, chr, int"),
+  answer("num, num, num, num"),
+  answer("fctr, Ord.factor, num, num"),
   random_answer_order = T
 )
 ```
