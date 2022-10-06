@@ -34,3 +34,7 @@ list_deps_csv <- function() {
   deps <- clean_deps(deps)
   paste0("c('", paste0(deps, collapse = "','"), ")'")
 }
+
+system_deps <- function() {
+  pak::local_system_requirements("ubuntu", "20.04")
+}
